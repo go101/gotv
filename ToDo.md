@@ -4,6 +4,8 @@
 * need a -silent option to hide gotv messages
   * good for testing
 
+* gotv list-versions [-cached] [-pinned] [-releases] [-branches]
+
 * handle os.Interrupt, syscall.SIGTERM
 
 * replace /home/user/.cache to $HOME/.cache in all outputs

@@ -69,7 +69,7 @@ Other `gotv` commands:
 
 ```
 gotv fetch-versions
-gotv list-versions [-cached] [-pinned] [-releases] [-branches]
+gotv list-versions
 gotv cache-version ToolchainVersion [ToolchainVersion ...]
 gotv uncache-version ToolchainVersion [ToolchainVersion ...]
 gotv pin-version ToolchainVersion
