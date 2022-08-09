@@ -1,12 +1,10 @@
 
-* do auth for git@github.com:golang/go.git
+
 
 * need a -silent option to hide gotv messages
   * good for testing
 
 * gotv list-versions [-cached] [-pinned] [-releases] [-branches]
-
-* handle os.Interrupt, syscall.SIGTERM
 
 * replace /home/user/.cache to $HOME/.cache in all outputs
   * need to implement a ReplaceWriter io.Writer (as a indovidual module)
@@ -23,3 +21,5 @@
 
 * building a toolchain in a temp dir under cache dir,
   then rename it when succeeds (might need to delete the old outdated dir)
+
+* handle os.Interrupt, syscall.SIGTERM

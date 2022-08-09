@@ -6,10 +6,10 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"time"
 
 	"go101.org/gotv/internal/util"
@@ -30,6 +30,23 @@ func (gotv *gotv) normalizeToolchainVersion(tv *toolchainVersion) error {
 	}
 
 	if tv.kind == kind_Release {
+		if strings.HasSuffix(tv.version, ".") {
+			var prefix = tv.version[:len(tv.version)-1]
+			var latest = ""
+			for tag := range gotv.repoInfo.releaseTags {
+				if strings.HasPrefix(tag, prefix) {
+					if compareVersions(latest, tag) {
+						latest = tag
+					}
+				}
+			}
+			if latest == "" {
+				return fmt.Errorf("not latest version found for fake verison: %s", tv.version)
+			}
+
+			tv.version = latest
+		}
+
 		if v := gotv.repoInfo.releaseTags[tv.version]; v == "" {
 			return fmt.Errorf("release version %s not found", tv.version)
 		} else {
@@ -95,7 +112,7 @@ func (gotv *gotv) ensureToolchainVersion(tv *toolchainVersion) (_ string, err er
 		}
 	} else {
 		var outdated = true
-		var info, err = ioutil.ReadFile(infoFilePath)
+		var info, err = os.ReadFile(infoFilePath)
 		if err == nil {
 			var file InfoFile
 			err = json.Unmarshal(info, &file)
@@ -125,7 +142,7 @@ func (gotv *gotv) ensureToolchainVersion(tv *toolchainVersion) (_ string, err er
 
 	var buf bytes.Buffer
 	fmt.Fprintf(&buf, `{"revision": "%s"}`, revision)
-	if err := ioutil.WriteFile(infoFilePath, buf.Bytes(), 0644); err != nil {
+	if err := os.WriteFile(infoFilePath, buf.Bytes(), 0644); err != nil {
 		return "", err
 	}
 

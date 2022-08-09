@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/hex"
-	"io/ioutil"
+	"fmt"
 	"net"
 	"os"
 	"path/filepath"
@@ -24,13 +24,25 @@ func gitClone(repoAddr, toDir string) error {
 		if err != nil {
 			return err
 		}
-		sshKey, err := ioutil.ReadFile(filepath.Join(homeDir, ".ssh", "id_rsa"))
+		sshKey, err := os.ReadFile(filepath.Join(homeDir, ".ssh", "id_rsa"))
 		if err != nil {
 			return err
 		}
 		signer, err := ssh.ParsePrivateKey([]byte(sshKey))
 		if err != nil {
-			return err
+			if _, ok := err.(*ssh.PassphraseMissingError); !ok {
+				return err
+			}
+			fmt.Print(`Passphase: `)
+			var passphase string
+			_, err = fmt.Scanln(&passphase)
+			if err != nil {
+				return err
+			}
+			signer, err = ssh.ParsePrivateKeyWithPassphrase([]byte(sshKey), []byte(passphase))
+			if err != nil {
+				return err
+			}
 		}
 		hostKeyCallback := func(hostname string, remote net.Addr, key ssh.PublicKey) error {
 			return nil
@@ -59,12 +71,16 @@ func gitClone(repoAddr, toDir string) error {
 	return nil
 }
 
-func gitPull(repoDir string) error {
+func gitWorktree(repoDir string) (*git.Worktree, error) {
 	var repo, err = git.PlainOpen(repoDir)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	worktree, err := repo.Worktree()
+	return repo.Worktree()
+}
+
+func gitPull(repoDir string) error {
+	worktree, err := gitWorktree(repoDir)
 	if err != nil {
 		return err
 	}
@@ -88,11 +104,7 @@ func gitFetch(repoDir string) error {
 }
 
 func gitCheckout(repoDir string, opt *git.CheckoutOptions) error {
-	var repo, err = git.PlainOpen(repoDir)
-	if err != nil {
-		return err
-	}
-	worktree, err := repo.Worktree()
+	worktree, err := gitWorktree(repoDir)
 	if err != nil {
 		return err
 	}
@@ -131,129 +143,4 @@ func gitListTagsAndRemoteBranches(repoDir string) (tags map[string]string, bras 
 	})
 
 	return
-}
-
-type versionKind int
-
-// Note: git allows a branch name collides with a revision hash or a tag name.
-//       Doing so will cause ambiguousness in "git checkout such-a-branch-name".
-
-const (
-	kind_Invalid versionKind = iota // must be 0
-
-	kind_Tag
-	kind_Branch
-	kind_Revision
-
-	// 1         (<=> name:go1)
-	// 1.16.3    (<=> name:go1.16.3)
-	// 1.17      (<=> name:go1.17)
-	// 1.18rc2   (<=> name:go1.18rc2)
-	// 1.19beta1 (<=> name:go1.19beta1)
-	kind_Release
-	// ToDo:
-	// 1.        (<=> name:go1.Latest.Latest)
-	// 1.18.     (<=> name:go1.18.Latest)
-
-	// :tip  (<=> name:master)
-	// :1.18 (<=> name:release-branch.go1.18)
-	kind_Alias
-)
-
-type toolchainVersion struct {
-	kind    versionKind
-	version string
-}
-
-func (tv toolchainVersion) IsInvalid() (bool, string) {
-	if tv.kind == kind_Invalid {
-		return true, tv.version
-	}
-	return false, ""
-}
-
-func (tv toolchainVersion) String() string {
-	switch tv.kind {
-	case kind_Tag:
-		return "tag:" + tv.version
-	case kind_Branch:
-		return "bra:" + tv.version
-	case kind_Revision:
-		return "rev:" + tv.version
-	case kind_Release:
-		return "" + tv.version
-	case kind_Alias:
-		return ":" + tv.version
-	}
-
-	return "" // invalid
-}
-
-func (tv toolchainVersion) folderName() string {
-	var folder string
-	switch tv.kind {
-	default:
-		panic("bad version: " + tv.String())
-	case kind_Tag:
-		folder = "tag_" + tv.version
-	case kind_Branch:
-		folder = "bra_" + tv.version
-	case kind_Revision:
-		folder = "rev_" + tv.version
-	}
-
-	return folder
-}
-
-// The second result means "consumed".
-func parseGoToolchainVersion(arg string) toolchainVersion {
-	arg = strings.TrimSpace(arg)
-	if len(arg) == 0 {
-		return toolchainVersion{kind_Invalid, "version is unspecified"}
-	}
-
-	if c := arg[0]; '0' <= c && c <= '9' {
-		return toolchainVersion{kind_Release, trimTaillingDotZeros(arg)}
-	}
-
-	i := strings.IndexByte(arg, ':')
-	if i < 0 {
-		return toolchainVersion{kind_Invalid, "invalid version: " + arg}
-	}
-
-	kind, version := arg[:i], arg[i+1:]
-
-	if len(version) == 0 {
-		return toolchainVersion{kind_Invalid, "unspecified version for kind (" + kind + ")"}
-	}
-
-	switch kind {
-	default:
-		return toolchainVersion{kind_Invalid, "undetermined version kind: " + kind}
-	case "tag":
-		return toolchainVersion{kind_Tag, version}
-	case "bra":
-		return toolchainVersion{kind_Branch, version}
-	case "rev":
-		return toolchainVersion{kind_Revision, version}
-	case "": // alias verisons
-	}
-
-	// validate alias names (roughly)
-
-	if version != "tip" {
-		if c := version[0]; c < '0' || c > '9' {
-			return toolchainVersion{kind_Invalid, "an alias version must be tip or a go version"}
-		}
-		version = trimTaillingDotZeros(version)
-	}
-
-	return toolchainVersion{kind_Alias, version}
-}
-
-func trimTaillingDotZeros(version string) string {
-	for strings.HasSuffix(version, ".0") {
-		version = version[:len(version)-2]
-	}
-	return version
 }

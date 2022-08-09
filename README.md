@@ -9,7 +9,9 @@ This tool is mainly built for me to check differeces of official Go toolchain ve
 
 ## Installation
 
-A recennt Go toolchain version is needed to install **gotv**.
+A recent Go toolchain version (1.17+) is needed to install **gotv**.
+Now, the toolchain version is also used as the bootstrap toolchain for building and caching
+other toolchain versions during `gotv` command executions.
 
 ```
 go install go101.org/gotv@latest
@@ -29,6 +31,7 @@ During running the first such a command, the Go git repository will be cloned (n
 * a Go release version, such as `1.17.13`, `1.18`, `1.19rc1`,
   which mean the release tag `go1.17.13`, `go1.18`, `go1.19rc1`, respectively,
   in the Go git repository.
+  Note: `1.N.` means the latest release of `1.N` and `1.` means the latest Go 1 release verison.
 * `:tip`, which means the local latest `master` branch in the Go git repository.
 * `:1.N`, which means the local latest `release-branch.go1.N` branch in the Go git repository.
 

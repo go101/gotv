@@ -26,13 +26,17 @@ type repoInfo struct {
 	allBranches     map[string]string // branch name to head hash hex
 }
 
-func born() (gotv gotv, err error) {
+func born() (_ gotv, err error) {
 	cacheDir, err := os.UserCacheDir()
 	if err != nil {
 		return
 	}
 
-	gotv.homeDir, _ = os.UserHomeDir()
+	return bornWithCacheDir(cacheDir)
+}
+
+func bornWithCacheDir(cacheDir string) (gotv gotv, err error) {
+	gotv.homeDir, _ = os.UserHomeDir() // used to read user ssh key
 
 	gotv.repositoryDir = filepath.Join(cacheDir, "gotv", "the-repository")
 	gotv.cacheDir = filepath.Dir(gotv.repositoryDir)

@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -12,6 +11,10 @@ import (
 
 	"go101.org/gotv/internal/util"
 )
+
+func _(x []int) *[1]int {
+	return (*[1]int)(x) // requires 1.17+ toolchains
+}
 
 func main() {
 	args := make([]string, len(os.Args))
@@ -67,8 +70,10 @@ Usage (to use a specific Go toolchain version):
 	where ToolchainVersion might be
 	* a Go release version, such as 1.17.13, 1.18,
 	  and 1.19rc1, which mean the release tags
-	  go1.17.13,  go1.18, go1.19rc1, respectively,
+	  go1.17.13, go1.18, go1.19rc1, respectively,
 	  in the Go git repository.
+	  Note: 1.N. means the latest release of 1.N
+	  and 1. means the latest Go 1 release verison.
 	* :tip, which means the local latest master
 	  branch in the Go git repository.
 	* :N.M, such as 1.17, 1.18 and 1.19, which mean
@@ -88,7 +93,7 @@ GoTV specific commands:
 	)
 }
 
-const Version = "v0.0.2"
+const Version = "v0.0.3"
 
 func releaseGoTV() {
 	if _, err := util.RunShell(time.Minute*3, "", nil, nil, "go", "test", "./..."); err != nil {
@@ -111,7 +116,7 @@ func releaseGoTV() {
 
 	var verisonGoFile = "main.go"
 
-	oldContent, err := ioutil.ReadFile(verisonGoFile)
+	oldContent, err := os.ReadFile(verisonGoFile)
 	if err != nil {
 		log.Printf("failed to load version.go: %s", err)
 		return
@@ -193,7 +198,7 @@ func releaseGoTV() {
 		buf.Write(oldContent[:m])
 		buf.Write(version)
 		buf.Write(oldContent[n:])
-		return ioutil.WriteFile(verisonGoFile, buf.Bytes(), 0644)
+		return os.WriteFile(verisonGoFile, buf.Bytes(), 0644)
 	}
 
 	if err := writeNewContent(newVersion); err != nil {

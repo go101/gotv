@@ -6,10 +6,6 @@ import (
 	"io/fs"
 	"os"
 	"regexp"
-	"sort"
-	"strconv"
-	"strings"
-	//"time"
 
 	git "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
@@ -24,10 +20,12 @@ func (gotv *gotv) ensureGoRepository(pullOnExist bool) (err error) {
 			return err
 		}
 	} else {
-		// ToDo: verify the local repository is okay.
-		// if okay, return, otherwise, delete the dir and coninue
+		var okay = true
+		_, err = gitWorktree(gotv.repositoryDir)
+		if err != nil {
+			okay = false
+		}
 
-		okay := true
 		if okay {
 			if pullOnExist {
 				err = gitPull(gotv.repositoryDir)
@@ -143,50 +141,4 @@ func collectRepositoryInfo(repoDir string) (repoInfo repoInfo, err error) {
 	}
 
 	return
-}
-
-func sortVersions(versions []string) {
-	var indexNonDigits = func(str string) int {
-		for i, b := range str {
-			if b < '0' || b > '9' {
-				return i
-			}
-		}
-		return len(str)
-	}
-
-	sort.Slice(versions, func(a, b int) bool {
-		x, y := versions[a], versions[b]
-		xs, ys := strings.SplitN(x, ".", -1), strings.SplitN(y, ".", -1)
-		var true, false = true, false
-		if len(xs) > len(ys) {
-			xs, ys = ys, xs
-			true, false = false, true
-		}
-		for i, r := range xs {
-			s := ys[i]
-			rk := indexNonDigits(r)
-			sk := indexNonDigits(s)
-			rn, _ := strconv.Atoi(r[:rk])
-			sn, _ := strconv.Atoi(s[:sk])
-			if rn < sn {
-				return true
-			}
-			if rn > sn {
-				return false
-			}
-			if len(r) == rk {
-				if len(s) == sk {
-					continue
-				}
-				return false
-			} else if len(s) == sk {
-				return true
-			} else {
-				return r[rk:] <= s[sk:]
-			}
-		}
-
-		return true
-	})
 }

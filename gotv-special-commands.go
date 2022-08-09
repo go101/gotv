@@ -256,7 +256,7 @@ your PATH environment variable to use go commands directly:
 
 	%s
 
-`, gotv.pinnedToolchainDir)
+`, filepath.Join(gotv.pinnedToolchainDir, "bin"))
 
 	return nil
 }
