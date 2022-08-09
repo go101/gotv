@@ -59,6 +59,7 @@ func (gotv *gotv) ensureGoRepository(pullOnExist bool) (err error) {
 Generally, it should be one of the following ones:
 * https://go.googlesource.com/go
 * https://github.com/golang/go.git
+* git@github.com:golang/go.git
 
 Specify it here: `)
 
@@ -67,8 +68,6 @@ Specify it here: `)
 	if err != nil {
 		return err
 	}
-
-	// ToDo: if the "git@github.com:golang/go.git" url is chosen, need config auth
 
 	fmt.Println("[Run]: git clone", gotv.replaceHomeDir(repoAddr), gotv.replaceHomeDir(gotv.repositoryDir))
 	err = gitClone(repoAddr, gotv.repositoryDir)

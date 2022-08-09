@@ -88,7 +88,7 @@ GoTV specific commands:
 	)
 }
 
-const Version = "v0.0.2-preview"
+const Version = "v0.0.2"
 
 func releaseGoTV() {
 	if _, err := util.RunShell(time.Minute*3, "", nil, nil, "go", "test", "./..."); err != nil {
@@ -96,6 +96,10 @@ func releaseGoTV() {
 		return
 	}
 	if _, err := util.RunShell(time.Minute*3, "", nil, nil, "go", "fmt", "./..."); err != nil {
+		log.Println(err)
+		return
+	}
+	if _, err := util.RunShell(time.Minute*3, "", nil, nil, "go", "mod", "tidy"); err != nil {
 		log.Println(err)
 		return
 	}

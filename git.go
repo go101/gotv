@@ -2,22 +2,52 @@ package main
 
 import (
 	"encoding/hex"
+	"io/ioutil"
+	"net"
 	"os"
+	"path/filepath"
 	"strings"
 
 	git "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
+	gittransport "github.com/go-git/go-git/v5/plumbing/transport"
+	gitssh "github.com/go-git/go-git/v5/plumbing/transport/ssh"
+	"golang.org/x/crypto/ssh"
 	//gitobject "github.com/go-git/go-git/v5/plumbing/object"
 	//gitconfig "github.com/go-git/go-git/v5/config"
 )
 
 func gitClone(repoAddr, toDir string) error {
-	//cmdAndArgs := []string{"git", "clone", repoAddr, toDir}
-	//_, err := util.RunShell(time.Hour, "", nil, os.Stdout, cmdAndArgs...)
+	var auth gittransport.AuthMethod
+	if strings.HasPrefix(repoAddr, "git@github.com:") {
+		var homeDir, err = os.UserHomeDir()
+		if err != nil {
+			return err
+		}
+		sshKey, err := ioutil.ReadFile(filepath.Join(homeDir, ".ssh", "id_rsa"))
+		if err != nil {
+			return err
+		}
+		signer, err := ssh.ParsePrivateKey([]byte(sshKey))
+		if err != nil {
+			return err
+		}
+		hostKeyCallback := func(hostname string, remote net.Addr, key ssh.PublicKey) error {
+			return nil
+		}
 
-	// ToDo: make "git@github.com:golang/go.git" work.
+		auth = &gitssh.PublicKeys{
+			User:   "git",
+			Signer: signer,
+			HostKeyCallbackHelper: gitssh.HostKeyCallbackHelper{
+				HostKeyCallback: hostKeyCallback,
+			},
+		}
+	}
+
 	var _, err = git.PlainClone(toDir, false,
 		&git.CloneOptions{
+			Auth:     auth,
 			URL:      repoAddr,
 			Progress: os.Stdout,
 		},
