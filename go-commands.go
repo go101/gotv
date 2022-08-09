@@ -140,12 +140,6 @@ func (gotv *gotv) ensureToolchainVersion(tv *toolchainVersion) (_ string, err er
 		return "", err
 	}
 
-	var buf bytes.Buffer
-	fmt.Fprintf(&buf, `{"revision": "%s"}`, revision)
-	if err := os.WriteFile(infoFilePath, buf.Bytes(), 0644); err != nil {
-		return "", err
-	}
-
 	defer func() {
 		if err == nil {
 			os.RemoveAll(filepath.Join(toolchainDir, ".git"))
@@ -162,6 +156,12 @@ func (gotv *gotv) ensureToolchainVersion(tv *toolchainVersion) (_ string, err er
 	}
 	var toolchainSrcDir = filepath.Dir(makeScript)
 	if _, err := util.RunShell(time.Hour, toolchainSrcDir, nil, os.Stdout, makeScript); err != nil {
+		return "", err
+	}
+
+	var buf bytes.Buffer
+	fmt.Fprintf(&buf, `{"revision": "%s"}`, revision)
+	if err := os.WriteFile(infoFilePath, buf.Bytes(), 0644); err != nil {
 		return "", err
 	}
 
