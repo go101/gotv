@@ -78,7 +78,6 @@ func (tv toolchainVersion) folderName() string {
 	return folder
 }
 
-// The second result means "consumed".
 func parseGoToolchainVersion(arg string) toolchainVersion {
 	arg = strings.TrimSpace(arg)
 	if len(arg) == 0 {
@@ -91,7 +90,7 @@ func parseGoToolchainVersion(arg string) toolchainVersion {
 
 	i := strings.IndexByte(arg, ':')
 	if i < 0 {
-		return toolchainVersion{kind_Invalid, "invalid version: " + arg}
+		return toolchainVersion{kind_Invalid, "unrecognized command or invalid version: " + arg}
 	}
 
 	kind, version := arg[:i], arg[i+1:]
@@ -178,4 +177,21 @@ func compareVersions(x, y string) bool {
 	}
 
 	return true
+}
+
+// ToDo:
+// Return nil for failed to find the steps.
+func determineBootstrapToolchainVersion(tv toolchainVersion) *toolchainVersion {
+
+	// Now versions <= 1.5.n are not supported.
+	// Version 1.6 - 1.12.n are built with Go 1.15.15.
+	// Versions 1.13 - 1.21.n are built with Go 1.17.13.
+	// Higher versions are built with Go 1.20.n.
+
+	// If the GOROOT_BOOTSTRAP env var is set, use it.
+
+	// If no cached versions yet, use system go toolchain.
+	// The system go toolchain is presented as an invalid version.
+
+	return &toolchainVersion{kind: kind_Invalid}
 }

@@ -73,6 +73,7 @@ func (gotv *gotv) normalizeToolchainVersion(tv *toolchainVersion) error {
 }
 
 func (gotv *gotv) ensureToolchainVersion(tv *toolchainVersion) (_ string, err error) {
+
 	if err := gotv.ensureGoRepository(false); err != nil {
 		return "", err
 	}
@@ -85,6 +86,19 @@ func (gotv *gotv) ensureToolchainVersion(tv *toolchainVersion) (_ string, err er
 
 	if err := gotv.normalizeToolchainVersion(tv); err != nil {
 		return "", err
+	}
+
+	var bootstrapRoot = ""
+	if bootstrapRoot = os.Getenv("GOROOT_BOOTSTRAP"); bootstrapRoot == "" {
+		var bootstrapTV = determineBootstrapToolchainVersion(*tv)
+		if bootstrapTV == nil {
+			return "", errors.New("unable to build toolchain " + tv.String())
+		} else if bootstrapTV.kind != kind_Invalid {
+			bootstrapRoot, err = gotv.ensureToolchainVersion(bootstrapTV)
+			if err != nil {
+				return "", err
+			}
+		}
 	}
 
 	var folder = tv.folderName()
@@ -154,8 +168,16 @@ func (gotv *gotv) ensureToolchainVersion(tv *toolchainVersion) (_ string, err er
 	} else {
 		makeScript = filepath.Join(toolchainDir, "src", "make.bash")
 	}
+
 	var toolchainSrcDir = filepath.Dir(makeScript)
-	if _, err := util.RunShell(time.Hour, toolchainSrcDir, nil, os.Stdout, makeScript); err != nil {
+	fmt.Println("[Run]:", gotv.replaceHomeDir(makeScript))
+
+	var envs []string
+	if bootstrapRoot != "" {
+		envs = []string{"GOROOT_BOOTSTRAP=" + bootstrapRoot}
+	}
+
+	if _, err := util.RunShell(time.Hour, toolchainSrcDir, envs, os.Stdout, makeScript); err != nil {
 		return "", err
 	}
 

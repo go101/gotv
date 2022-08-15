@@ -1,5 +1,6 @@
 
-
+* more tests
+  * need a way to simulate the remote clone
 
 * need a -silent option to hide gotv messages
   * good for testing
