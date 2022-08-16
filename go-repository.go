@@ -96,7 +96,10 @@ func (gotv *gotv) copyBranchShallowly(tv toolchainVersion, toDir string) error {
 			o.Branch = plumbing.NewTagReferenceName(tv.version)
 		} else { // tv.kind == kind_Branch
 			o.Branch = plumbing.NewRemoteReferenceName("origin", tv.version)
-			// o.Create = true // ToDo: not work. how to create local branches?
+			// o.Create = true
+			// ToDo: not work. how to create local branches using go-git?
+			// Use a walkaround to avoid creating local branches now.
+			// But this is a question needing an answer.
 		}
 
 		fmt.Println("[Run]: git checkout", tv.version)
@@ -127,8 +130,6 @@ func collectRepositoryInfo(repoDir string) (repoInfo repoInfo, err error) {
 	for t := range tags {
 		if ms := releaseTagRegexp.FindAllStringSubmatch(t, 1); len(ms) > 0 {
 			repoInfo.releaseTags[ms[0][1]] = t
-
-			// ToDo: find latest for version 1, and 1.n. (Make a tree structure?)
 		}
 	}
 

@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-func RunShellCommand(timeout time.Duration, wd string, envs []string, stdout io.Writer, cmd string, args ...string) ([]byte, error) {
+func RunShellCommand(timeout time.Duration, wd string, envs []string, stdout, stderr io.Writer, cmd string, args ...string) ([]byte, error) {
 	if wd == "" {
 		var err error
 		wd, err = os.Getwd()
@@ -29,9 +29,9 @@ func RunShellCommand(timeout time.Duration, wd string, envs []string, stdout io.
 	command.Env = removeGODEBUG(append(envs[:len(envs):cap(envs)], os.Environ()...))
 	var output []byte
 	var err error
-	if stdout != nil {
+	if stdout != nil || stderr != nil {
 		command.Stdout = stdout
-		command.Stderr = stdout
+		command.Stderr = stderr
 		err = command.Run()
 	} else {
 		var erroutput bytes.Buffer
@@ -47,12 +47,12 @@ func RunShellCommand(timeout time.Duration, wd string, envs []string, stdout io.
 	return output, err
 }
 
-func RunShell(timeout time.Duration, wd string, envs []string, stdout io.Writer, cmdAndArgs ...string) ([]byte, error) {
+func RunShell(timeout time.Duration, wd string, envs []string, stdout, stderr io.Writer, cmdAndArgs ...string) ([]byte, error) {
 	if len(cmdAndArgs) == 0 {
 		panic("command is not specified")
 	}
 
-	return RunShellCommand(timeout, wd, envs, stdout, cmdAndArgs[0], cmdAndArgs[1:]...)
+	return RunShellCommand(timeout, wd, envs, stdout, stderr, cmdAndArgs[0], cmdAndArgs[1:]...)
 }
 
 func removeGODEBUG(envs []string) []string {

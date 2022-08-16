@@ -1,9 +1,8 @@
 
 * more tests
   * need a way to simulate the remote clone
-
-* need a -silent option to hide gotv messages
-  * good for testing
+  * need a -silent option to hide gotv messages
+    * good for testing
 
 * gotv list-versions [-cached] [-pinned] [-releases] [-branches]
 
@@ -12,13 +11,11 @@
 
 * error if there are local modificaitons, notify clean these modificaitons?
 
-* bootstrap version:
+* download a bootstrap version if no system go installation found
   * use go1.17.13.GOOS-GOARCH.[tar.gz|zip].
   * and https://github.com/golang/go/issues/54265
 
-* run "gotv 1.9 ...", get error
-  ERROR: Cannot find /home/lx/go1.4/bin/go.
-  Set $GOROOT_BOOTSTRAP to a working Go tree >= Go 1.4.
+* unable to build toolchain with versions <= 1.5.n
 
 * building a toolchain in a temp dir under cache dir,
   then rename it when succeeds (might need to delete the old outdated dir)

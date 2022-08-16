@@ -51,7 +51,10 @@ func (gotv *gotv) replaceHomeDir(in string) string {
 	if gotv.homeDir == "" {
 		return in
 	}
-	if strings.HasPrefix(in, gotv.homeDir) {
+	if len(in) == len(gotv.homeDir) {
+		return in
+	}
+	if strings.HasPrefix(in, gotv.homeDir) && in[len(gotv.homeDir)] == filepath.Separator {
 		return "$HOME" + in[len(gotv.homeDir):]
 	}
 

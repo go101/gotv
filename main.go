@@ -76,7 +76,7 @@ Usage (to use a specific Go toolchain version):
 	  and 1. means the latest Go 1 release verison.
 	* :tip, which means the local latest master
 	  branch in the Go git repository.
-	* :N.M, such as 1.17, 1.18 and 1.19, which mean
+	* :N.M, such as :1.17, :1.18 and :1.19, which mean
 	  the local latest release-branch.goN.M branch
 	  in the Go git repository.
 
@@ -93,18 +93,18 @@ GoTV specific commands:
 	)
 }
 
-const Version = "v0.0.5"
+const Version = "v0.0.6"
 
 func releaseGoTV() {
-	if _, err := util.RunShell(time.Minute*3, "", nil, nil, "go", "test", "./..."); err != nil {
+	if _, err := util.RunShell(time.Minute*3, "", nil, nil, nil, "go", "test", "./..."); err != nil {
 		log.Println(err)
 		return
 	}
-	if _, err := util.RunShell(time.Minute*3, "", nil, nil, "go", "fmt", "./..."); err != nil {
+	if _, err := util.RunShell(time.Minute*3, "", nil, nil, nil, "go", "fmt", "./..."); err != nil {
 		log.Println(err)
 		return
 	}
-	if _, err := util.RunShell(time.Minute*3, "", nil, nil, "go", "mod", "tidy"); err != nil {
+	if _, err := util.RunShell(time.Minute*3, "", nil, nil, nil, "go", "mod", "tidy"); err != nil {
 		log.Println(err)
 		return
 	}
@@ -207,11 +207,11 @@ func releaseGoTV() {
 	}
 
 	var gitTag = fmt.Sprintf("v%s", newVersion)
-	if output, err := util.RunShellCommand(time.Second*5, "", nil, nil,
+	if output, err := util.RunShellCommand(time.Second*5, "", nil, nil, nil,
 		"git", "commit", "-a", "-m", gitTag); err != nil {
 		log.Printf("git commit error: %s\n%s", err, output)
 	}
-	if output, err := util.RunShellCommand(time.Second*5, "", nil, nil,
+	if output, err := util.RunShellCommand(time.Second*5, "", nil, nil, nil,
 		"git", "tag", gitTag); err != nil {
 		log.Printf("git commit error: %s\n%s", err, output)
 	}

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -14,6 +15,13 @@ import (
 
 	"go101.org/gotv/internal/util"
 )
+
+func goCommandFilename() string {
+	if runtime.GOOS == "windows" {
+		return "go.exe"
+	}
+	return "go"
+}
 
 func (gotv *gotv) tryRunningGoToolchainCommand(tv toolchainVersion, args []string) error {
 	if _, err := gotv.ensureToolchainVersion(&tv); err != nil {
@@ -177,7 +185,7 @@ func (gotv *gotv) ensureToolchainVersion(tv *toolchainVersion) (_ string, err er
 		envs = []string{"GOROOT_BOOTSTRAP=" + bootstrapRoot}
 	}
 
-	if _, err := util.RunShell(time.Hour, toolchainSrcDir, envs, os.Stdout, makeScript); err != nil {
+	if _, err := util.RunShell(time.Hour, toolchainSrcDir, envs, os.Stdout, os.Stdout, makeScript); err != nil {
 		return "", err
 	}
 
@@ -196,17 +204,22 @@ func (gotv *gotv) runGoToolchainCommand(tv toolchainVersion, args []string) erro
 		panic("toochain version " + tv.String() + " is not built?")
 	}
 
-	goCommandPath := filepath.Join(toolchainBinDir, "go") // ToDo: other OSes
+	goCommandPath := filepath.Join(toolchainBinDir, goCommandFilename())
+	if _, err := os.Stat(goCommandPath); err != nil {
+		return err
+	}
 
 	fmt.Print("[Run]: ", gotv.replaceHomeDir(goCommandPath))
 	for _, a := range args {
 		fmt.Print(" ", a)
 	}
 	fmt.Println()
-	_, err := util.RunShellCommand(time.Hour, "", nil, os.Stdout, goCommandPath, args...)
+	_, err := util.RunShellCommand(time.Hour, "", nil, os.Stdout, os.Stderr, goCommandPath, args...)
 	if err != nil {
-		return err
+		if ee, ok := err.(*exec.ExitError); ok { // always okay
+			os.Exit(ee.ExitCode())
+		}
 	}
 
-	return nil
+	return err // must be nil
 }

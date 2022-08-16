@@ -24,9 +24,6 @@ const (
 	// 1.18rc2   (<=> name:go1.18rc2)
 	// 1.19beta1 (<=> name:go1.19beta1)
 	kind_Release
-	// ToDo:
-	// 1.        (<=> name:go1.Latest.Latest)
-	// 1.18.     (<=> name:go1.18.Latest)
 
 	// :tip  (<=> name:master)
 	// :1.18 (<=> name:release-branch.go1.18)
