@@ -17,47 +17,55 @@ import (
 	//gitconfig "github.com/go-git/go-git/v5/config"
 )
 
-func gitClone(repoAddr, toDir string) error {
-	var auth gittransport.AuthMethod
+func gitAuth(repoAddr string) (gittransport.AuthMethod, error) {
 	if strings.HasPrefix(repoAddr, "git@github.com:") {
 		var homeDir, err = os.UserHomeDir()
 		if err != nil {
-			return err
+			return nil, err
 		}
 		sshKey, err := os.ReadFile(filepath.Join(homeDir, ".ssh", "id_rsa"))
 		if err != nil {
-			return err
+			return nil, err
 		}
 		signer, err := ssh.ParsePrivateKey([]byte(sshKey))
 		if err != nil {
 			if _, ok := err.(*ssh.PassphraseMissingError); !ok {
-				return err
+				return nil, err
 			}
 			fmt.Print(`Passphase: `)
 			var passphase string
 			_, err = fmt.Scanln(&passphase)
 			if err != nil {
-				return err
+				return nil, err
 			}
 			signer, err = ssh.ParsePrivateKeyWithPassphrase([]byte(sshKey), []byte(passphase))
 			if err != nil {
-				return err
+				return nil, err
 			}
 		}
 		hostKeyCallback := func(hostname string, remote net.Addr, key ssh.PublicKey) error {
 			return nil
 		}
 
-		auth = &gitssh.PublicKeys{
+		return &gitssh.PublicKeys{
 			User:   "git",
 			Signer: signer,
 			HostKeyCallbackHelper: gitssh.HostKeyCallbackHelper{
 				HostKeyCallback: hostKeyCallback,
 			},
-		}
+		}, nil
 	}
 
-	var _, err = git.PlainClone(toDir, false,
+	return nil, nil
+}
+
+func gitClone(repoAddr, toDir string) error {
+	var auth, err = gitAuth(repoAddr)
+	if err != nil {
+		return err
+	}
+
+	_, err = git.PlainClone(toDir, false,
 		&git.CloneOptions{
 			Auth:     auth,
 			URL:      repoAddr,
@@ -71,21 +79,30 @@ func gitClone(repoAddr, toDir string) error {
 	return nil
 }
 
-func gitWorktree(repoDir string) (*git.Worktree, error) {
+func gitPull(repoDir string) error {
 	var repo, err = git.PlainOpen(repoDir)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return repo.Worktree()
-}
 
-func gitPull(repoDir string) error {
-	worktree, err := gitWorktree(repoDir)
+	remote, err := repo.Remote("origin")
+	if err != nil {
+		return err
+	}
+
+	repoAddr := remote.Config().URLs[0]
+	auth, err := gitAuth(repoAddr)
+	if err != nil {
+		return err
+	}
+
+	worktree, err := repo.Worktree()
 	if err != nil {
 		return err
 	}
 
 	var o = git.PullOptions{
+		Auth:  auth,
 		Force: true,
 	}
 	return worktree.Pull(&o)
@@ -97,10 +114,30 @@ func gitFetch(repoDir string) error {
 		return err
 	}
 
+	remote, err := repo.Remote("origin")
+	if err != nil {
+		return err
+	}
+
+	repoAddr := remote.Config().URLs[0]
+	auth, err := gitAuth(repoAddr)
+	if err != nil {
+		return err
+	}
+
 	var o = git.FetchOptions{
+		Auth:  auth,
 		Force: true,
 	}
 	return repo.Fetch(&o)
+}
+
+func gitWorktree(repoDir string) (*git.Worktree, error) {
+	var repo, err = git.PlainOpen(repoDir)
+	if err != nil {
+		return nil, err
+	}
+	return repo.Worktree()
 }
 
 func gitCheckout(repoDir string, opt *git.CheckoutOptions) error {
