@@ -8,7 +8,6 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"strings"
 	"time"
 )
 
@@ -26,7 +25,7 @@ func RunShellCommand(timeout time.Duration, wd string, envs []string, stdout, st
 	defer cancel()
 	command := exec.CommandContext(ctx, cmd, args...)
 	command.Dir = wd
-	command.Env = removeGODEBUG(append(envs[:len(envs):cap(envs)], os.Environ()...))
+	command.Env = append(envs[:len(envs):cap(envs)], os.Environ()...)
 	var output []byte
 	var err error
 	if stdout != nil || stderr != nil {
@@ -53,14 +52,4 @@ func RunShell(timeout time.Duration, wd string, envs []string, stdout, stderr io
 	}
 
 	return RunShellCommand(timeout, wd, envs, stdout, stderr, cmdAndArgs[0], cmdAndArgs[1:]...)
-}
-
-func removeGODEBUG(envs []string) []string {
-	r := envs[:0]
-	for _, e := range envs {
-		if !strings.HasPrefix(e, "GODEBUG=") {
-			r = append(r, e)
-		}
-	}
-	return r
 }
