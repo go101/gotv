@@ -16,7 +16,7 @@ type gotv struct {
 
 	repoInfo repoInfo
 
-	versionBinDirs map[toolchainVersion]string
+	versionGoCmdPaths map[toolchainVersion]string
 }
 
 type repoInfo struct {
@@ -42,7 +42,7 @@ func bornWithCacheDir(cacheDir string) (gotv gotv, err error) {
 	gotv.cacheDir = filepath.Dir(gotv.repositoryDir)
 	gotv.pinnedToolchainDir = filepath.Join(gotv.cacheDir, "pinned-toolchain")
 
-	gotv.versionBinDirs = make(map[toolchainVersion]string, 64)
+	gotv.versionGoCmdPaths = make(map[toolchainVersion]string, 128)
 
 	return
 }

@@ -23,7 +23,68 @@ func gitAuth(repoAddr string) (gittransport.AuthMethod, error) {
 		if err != nil {
 			return nil, err
 		}
-		sshKey, err := os.ReadFile(filepath.Join(homeDir, ".ssh", "id_rsa"))
+
+		var potentialKeys = make([]string, 0, 2)
+		sshPath := filepath.Join(homeDir, ".ssh")
+		files, err := os.ReadDir(sshPath)
+		if err == nil {
+			for _, f := range files {
+				if f.IsDir() {
+					continue
+				}
+				name := f.Name()
+				if name != "known_hosts" && !strings.HasSuffix(name, ".pub") {
+					potentialKeys = append(potentialKeys, filepath.Join(sshPath, name))
+				}
+			}
+		}
+
+		fmt.Println()
+
+		var sshKeyFilePath string
+		switch len(potentialKeys) {
+		case 0:
+			fmt.Println(`Need a ssh key to authenticate to Github.`)
+			for strings.TrimSpace(sshKeyFilePath) == "" {
+				fmt.Print(`Specify the key file here: `)
+				_, err = fmt.Scanln(&sshKeyFilePath)
+				if err != nil && !strings.Contains(err.Error(), "unexpected newline") {
+					return nil, err
+				}
+				sshKeyFilePath = strings.TrimSpace(sshKeyFilePath)
+			}
+
+		case 1:
+			fmt.Printf(`Need a ssh key to authenticate to Github.
+Specify the key file here (Enter for %s): `, potentialKeys[0])
+			_, err = fmt.Scanln(&sshKeyFilePath)
+			if err != nil && !strings.Contains(err.Error(), "unexpected newline") {
+				return nil, err
+			}
+			sshKeyFilePath = strings.TrimSpace(sshKeyFilePath)
+			if sshKeyFilePath == "" {
+				sshKeyFilePath = potentialKeys[0]
+			}
+
+		case 2:
+			fmt.Println(`Need a ssh key to authenticate to Github.
+The key file might be one of (but not limited to) the following ones:`)
+			for _, f := range potentialKeys {
+				fmt.Printf("* %s\n", f)
+			}
+
+			fmt.Println()
+			for strings.TrimSpace(sshKeyFilePath) == "" {
+				fmt.Print(`Specify the key file here: `)
+				_, err = fmt.Scanln(&sshKeyFilePath)
+				if err != nil && !strings.Contains(err.Error(), "unexpected newline") {
+					return nil, err
+				}
+				sshKeyFilePath = strings.TrimSpace(sshKeyFilePath)
+			}
+		}
+
+		sshKey, err := os.ReadFile(sshKeyFilePath)
 		if err != nil {
 			return nil, err
 		}

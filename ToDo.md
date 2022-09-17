@@ -1,4 +1,10 @@
 
+* when using git:// url, let user choose/specify a private key
+  id_rsa, id_ecdsa, ...
+
+* now, "set CGO_ENABLED=0" on windows.
+  ToDo: download zig and "set CC=zig cc", ...
+
 * more tests
   * need a way to simulate the remote clone
   * need a -silent option to hide gotv messages
