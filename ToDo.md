@@ -4,7 +4,7 @@
   * need a -silent option to hide gotv messages
     * good for testing
 
-* gotv list-versions [-cached] [-pinned] [-releases] [-branches]
+* gotv list-versions [-cached] [-pinned] [-releases] [-branches] [-incomplete]
 
 * replace /home/user/.cache to $HOME/.cache in all outputs
   * need to implement a ReplaceWriter io.Writer (as a indovidual module)
@@ -21,3 +21,8 @@
   then rename it when succeeds (might need to delete the old outdated dir)
 
 * handle os.Interrupt, syscall.SIGTERM
+
+* Not totally the same as the releases downloaded from Go website.
+  use Go 1.19rc1 to build Go 1.19?
+  Using a lower version will make the go command in 1.19 not recognize GOMEMLIMIT env var.
+  Or a version itself (built with an older verison and pin it firstly) to build the version.
