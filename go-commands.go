@@ -16,13 +16,6 @@ import (
 	"go101.org/gotv/internal/util"
 )
 
-func goCommandFilename() string {
-	if runtime.GOOS == "windows" {
-		return "go.exe"
-	}
-	return "go"
-}
-
 func (gotv *gotv) tryRunningGoToolchainCommand(tv toolchainVersion, args []string) error {
 	if _, err := gotv.ensureToolchainVersion(&tv); err != nil {
 		return err
@@ -106,16 +99,31 @@ func (gotv *gotv) ensureToolchainVersion(tv *toolchainVersion) (_ string, err er
 			if err != nil {
 				return "", err
 			}
+		} else if runtime.GOOS == "windows" {
+			// It looks "make.bat" is unable to determine GOROOT_BOOTSTRAP,
+			// but "make.bash" is able to.
+			goExePath, err := exec.LookPath("go")
+			if err != nil {
+				fmt.Println(err)
+			}
+			bootstrapRoot = filepath.Dir(filepath.Dir(goExePath))
 		}
 	}
 
 	var folder = tv.folderName()
 
-	toochainBinDir := filepath.Join(gotv.cacheDir, folder, "bin")
-	toolchainDir := filepath.Dir(toochainBinDir)
+	var goCommandFilename string
+	if runtime.GOOS == "windows" {
+		goCommandFilename = "go.exe"
+	} else {
+		goCommandFilename = "go"
+	}
+
+	goCommandPath := filepath.Join(gotv.cacheDir, folder, "bin", goCommandFilename)
+	toolchainDir := filepath.Dir(filepath.Dir(goCommandPath))
 	defer func() {
 		if err == nil {
-			gotv.versionBinDirs[*tv] = toochainBinDir
+			gotv.versionGoCmdPaths[*tv] = goCommandPath
 		}
 	}()
 
@@ -128,7 +136,7 @@ func (gotv *gotv) ensureToolchainVersion(tv *toolchainVersion) (_ string, err er
 	var infoFilePath = filepath.Join(toolchainDir, gotvInfoFile)
 	var revision = gotv.toolchainVersion2Revision(*tv)
 
-	if _, err := os.Stat(toochainBinDir); err != nil {
+	if _, err := os.Stat(goCommandPath); err != nil {
 		if !errors.Is(err, fs.ErrNotExist) {
 			return "", err
 		}
@@ -181,11 +189,21 @@ func (gotv *gotv) ensureToolchainVersion(tv *toolchainVersion) (_ string, err er
 	fmt.Println("[Run]:", gotv.replaceHomeDir(makeScript))
 
 	var envs []string
-	if bootstrapRoot != "" {
+	if runtime.GOOS == "windows" {
+		if bootstrapRoot != "" {
+			envs = []string{"CGO_ENABLED=0", "GOROOT_BOOTSTRAP=" + bootstrapRoot}
+		} else {
+			envs = []string{"CGO_ENABLED=0"}
+		}
+	} else if bootstrapRoot != "" {
 		envs = []string{"GOROOT_BOOTSTRAP=" + bootstrapRoot}
 	}
 
 	if _, err := util.RunShell(time.Hour, toolchainSrcDir, envs, os.Stdout, os.Stdout, makeScript); err != nil {
+		return "", err
+	}
+
+	if _, err := os.Stat(goCommandPath); err != nil {
 		return "", err
 	}
 
@@ -199,12 +217,10 @@ func (gotv *gotv) ensureToolchainVersion(tv *toolchainVersion) (_ string, err er
 }
 
 func (gotv *gotv) runGoToolchainCommand(tv toolchainVersion, args []string) error {
-	toolchainBinDir, ok := gotv.versionBinDirs[tv]
+	goCommandPath, ok := gotv.versionGoCmdPaths[tv]
 	if !ok {
 		panic("toochain version " + tv.String() + " is not built?")
 	}
-
-	goCommandPath := filepath.Join(toolchainBinDir, goCommandFilename())
 	if _, err := os.Stat(goCommandPath); err != nil {
 		return err
 	}

@@ -6,6 +6,7 @@ import (
 	"io/fs"
 	"os"
 	"regexp"
+	"strings"
 
 	git "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
@@ -53,18 +54,22 @@ func (gotv *gotv) ensureGoRepository(pullOnExist bool) (err error) {
 		return err
 	}
 
-	fmt.Print(`Please specify the Go project repositry git address.
+	fmt.Println(`Please specify the Go project repositry git address.
 Generally, it should be one of the following ones:
 * https://go.googlesource.com/go
 * https://github.com/golang/go.git
-* git@github.com:golang/go.git
+* git@github.com:golang/go.git`)
 
-Specify it here: `)
+	fmt.Println()
 
 	var repoAddr string
-	_, err = fmt.Scanln(&repoAddr)
-	if err != nil {
-		return err
+	for repoAddr == "" {
+		fmt.Print(`Specify it here: `)
+		_, err = fmt.Scanln(&repoAddr)
+		if err != nil && !strings.Contains(err.Error(), "unexpected newline") {
+			return err
+		}
+		repoAddr = strings.TrimSpace(repoAddr)
 	}
 
 	fmt.Println("[Run]: git clone", gotv.replaceHomeDir(repoAddr), gotv.replaceHomeDir(gotv.repositoryDir))
