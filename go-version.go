@@ -18,15 +18,15 @@ const (
 	kind_Branch
 	kind_Revision
 
-	// 1         (<=> name:go1)
-	// 1.16.3    (<=> name:go1.16.3)
-	// 1.17      (<=> name:go1.17)
-	// 1.18rc2   (<=> name:go1.18rc2)
-	// 1.19beta1 (<=> name:go1.19beta1)
+	// 1         (<=> tag:go1)
+	// 1.16.3    (<=> tag:go1.16.3)
+	// 1.17      (<=> tag:go1.17)
+	// 1.18rc2   (<=> tag:go1.18rc2)
+	// 1.19beta1 (<=> tag:go1.19beta1)
 	kind_Release
 
-	// :tip  (<=> name:master)
-	// :1.18 (<=> name:release-branch.go1.18)
+	// :tip  (<=> bra:master)
+	// :1.18 (<=> bra:release-branch.go1.18)
 	kind_Alias
 )
 
