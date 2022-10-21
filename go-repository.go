@@ -10,8 +10,7 @@ import (
 
 	git "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
-	cp "github.com/otiai10/copy"
-	//"go101.org/gotv/internal/util"
+	"go101.org/gotv/internal/util"
 )
 
 func (gotv *gotv) ensureGoRepository(pullOnExist bool) (err error) {
@@ -87,7 +86,7 @@ func (gotv *gotv) copyBranchShallowly(tv toolchainVersion, toDir string) error {
 	switch tv.kind {
 	case kind_Tag, kind_Branch, kind_Revision:
 		fmt.Println("[Run]: cp -r", gotv.replaceHomeDir(repoDir), gotv.replaceHomeDir(toDir))
-		var err = cp.Copy(repoDir, toDir)
+		var err = util.CopyDir(repoDir, toDir)
 		if err != nil {
 			return err
 		}

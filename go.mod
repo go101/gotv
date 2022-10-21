@@ -4,7 +4,6 @@ go 1.17
 
 require (
 	github.com/go-git/go-git/v5 v5.4.2
-	github.com/otiai10/copy v1.7.0
 	golang.org/x/crypto v0.0.0-20210421170649-83a5a9bb288b
 )
 

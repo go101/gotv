@@ -7,7 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
-	cp "github.com/otiai10/copy"
+	"go101.org/gotv/internal/util"
 )
 
 type unknownCommand struct{}
@@ -245,7 +245,7 @@ func (gotv *gotv) pinVersion(version string) error {
 	}
 
 	fmt.Println("[Run]: cp -r", gotv.replaceHomeDir(toolchainDir), gotv.replaceHomeDir(gotv.pinnedToolchainDir))
-	err = cp.Copy(toolchainDir, gotv.pinnedToolchainDir)
+	err = util.CopyDir(toolchainDir, gotv.pinnedToolchainDir)
 	if err != nil {
 		return err
 	}
