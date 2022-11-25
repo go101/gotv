@@ -72,40 +72,51 @@ Usage (to use a specific Go toolchain version):
 	  and 1.19rc1, which mean the release tags
 	  go1.17.13, go1.18, go1.19rc1, respectively,
 	  in the Go git repository.
-	  Note: 1.N. means the latest release of 1.N
-	  and 1. means the latest Go 1 release verison.
+	  Note:
+	  * 1.N. means the latest release of 1.N
+	  * 1. means the latest Go 1 release verison
+	  * . means the latest Go release version
 	* :tip, which means the local latest master
 	  branch in the Go git repository.
 	* :N.M, such as :1.17, :1.18 and :1.19, which mean
 	  the local latest release-branch.goN.M branch
 	  in the Go git repository.
 
+	A ToolchainVersion suffixed with ! means remote
+	versions are needed to be fetched firstly.
+
 GoTV specific commands:
 	gotv fetch-versions
+		fetch remote versions (sync git repository)
 	gotv list-versions
+		list all (local) releases and versions branches
 	gotv cache-version ToolchainVersion [ToolchainVersion ...]
+		cache one or more versions
 	gotv uncache-version ToolchainVersion [ToolchainVersion ...]
+		uncache one or more versions
 	gotv pin-version ToolchainVersion
+		pin a specified version
 	gotv unpin-version
+		unpin the current pinned version
 `,
 		Version,
 		filepath.Base(program),
 	)
 }
 
-const Version = "v0.1.0"
+const Version = "v0.1.1"
 
 func releaseGoTV() {
 	if _, err := util.RunShell(time.Minute*3, "", nil, nil, nil, "go", "test", "./..."); err != nil {
-		log.Println(err)
+		log.Println("go test error:", err)
 		return
 	}
 	if _, err := util.RunShell(time.Minute*3, "", nil, nil, nil, "go", "fmt", "./..."); err != nil {
-		log.Println(err)
+		log.Println("go fmt error:", err)
 		return
 	}
 	if _, err := util.RunShell(time.Minute*3, "", nil, nil, nil, "go", "mod", "tidy"); err != nil {
-		log.Println(err)
+		log.Println("go mod tidy error:", err)
 		return
 	}
 

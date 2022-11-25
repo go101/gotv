@@ -6,8 +6,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
-
-	"go101.org/gotv/internal/util"
+	//"go101.org/gotv/internal/util"
 )
 
 type unknownCommand struct{}
@@ -52,21 +51,25 @@ func (gotv *gotv) tryRunningSpecialCommand(args []string) error {
 }
 
 func (gotv *gotv) fetchVersions() error {
-	if err := gotv.ensureGoRepository(false); err != nil {
+	var err error
+	var cloned bool
+	if cloned, err = gotv.ensureGoRepository(false); err != nil {
 		return err
 	}
 
-	oldRepoInfo, err := collectRepositoryInfo(gotv.repositoryDir)
-	if err != nil {
-		return err
-	}
+	var oldRepoInfo repoInfo
+	if !cloned {
+		oldRepoInfo, err = collectRepositoryInfo(gotv.repositoryDir)
+		if err != nil {
+			return err
+		}
 
-	fmt.Println("[Run]: cd", gotv.replaceHomeDir(gotv.repositoryDir))
-	fmt.Println("[Run]: git pull -a")
+		fmt.Println("[Run]: git pull -a (in " + gotv.replaceHomeDir(gotv.repositoryDir) + ")")
 
-	err = gitPull(gotv.repositoryDir)
-	if err != nil {
-		return err
+		err = gitPull(gotv.repositoryDir)
+		if err != nil {
+			return err
+		}
 	}
 
 	newRepoInfo, err := collectRepositoryInfo(gotv.repositoryDir)
@@ -92,10 +95,7 @@ func (gotv *gotv) fetchVersions() error {
 			newReleaseTags = append(newReleaseTags, tag)
 		}
 	}
-
-	if len(newReleaseTags) == 0 && len(newVersionBranches) == 0 {
-		fmt.Println("No new releases and version branches are found.")
-	}
+	var tipChanged = oldRepoInfo.tipHash != newRepoInfo.tipHash
 
 	sortVersions(updatedVersionBranches)
 	sortVersions(newVersionBranches)
@@ -113,6 +113,14 @@ func (gotv *gotv) fetchVersions() error {
 		}
 		needNewLine = true
 	}
+
+	if len(newReleaseTags) == 0 && len(newVersionBranches) == 0 {
+		if needNewLine {
+			fmt.Println()
+		}
+		fmt.Println("No new releases and version branches are found.")
+	}
+
 	if len(newVersionBranches) > 0 {
 		if needNewLine {
 			fmt.Println()
@@ -134,11 +142,18 @@ func (gotv *gotv) fetchVersions() error {
 		needNewLine = true
 	}
 
+	if tipChanged {
+		if needNewLine {
+			fmt.Println()
+		}
+		fmt.Println("Tip changed.")
+	}
+
 	return nil
 }
 
 func (gotv *gotv) listVersions(args ...string) error {
-	if err := gotv.ensureGoRepository(false); err != nil {
+	if _, err := gotv.ensureGoRepository(false); err != nil {
 		return err
 	}
 
@@ -183,16 +198,13 @@ func (gotv *gotv) listVersions(args ...string) error {
 }
 
 func (gotv *gotv) cacheVersion(versions ...string) error {
-	var tvs = make([]toolchainVersion, len(versions))
-	for i, version := range versions {
-		tvs[i] = parseGoToolchainVersion(version)
-		if invalid, message := tvs[i].IsInvalid(); invalid {
-			return errors.New(message)
-		}
+	tvs, err := parseGoToolchainVersions(versions...)
+	if err != nil {
+		return err
 	}
 
 	for i := range tvs {
-		if _, err := gotv.ensureToolchainVersion(&tvs[i]); err != nil {
+		if _, err := gotv.ensureToolchainVersion(&tvs[i], false); err != nil {
 			return err
 		}
 	}
@@ -201,19 +213,16 @@ func (gotv *gotv) cacheVersion(versions ...string) error {
 }
 
 func (gotv *gotv) uncacheVersion(versions ...string) error {
-	err := gotv.ensureGoRepository(false)
+	_, err := gotv.ensureGoRepository(false)
 	if err != nil {
 		return err
 	}
 
 	gotv.repoInfo, err = collectRepositoryInfo(gotv.repositoryDir)
 
-	var tvs = make([]toolchainVersion, len(versions))
-	for i, version := range versions {
-		tvs[i] = parseGoToolchainVersion(version)
-		if invalid, message := tvs[i].IsInvalid(); invalid {
-			return errors.New(message)
-		}
+	tvs, err := parseGoToolchainVersions(versions...)
+	if err != nil {
+		return err
 	}
 
 	for i := range tvs {
@@ -233,30 +242,23 @@ func (gotv *gotv) uncacheVersion(versions ...string) error {
 
 func (gotv *gotv) pinVersion(version string) error {
 	var tv = parseGoToolchainVersion(version)
+	if invalid, message := tv.IsInvalid(); invalid {
+		return errors.New(message)
+	}
 
-	var toolchainDir, err = gotv.ensureToolchainVersion(&tv)
+	var _, err = gotv.ensureToolchainVersion(&tv, true)
 	if err != nil {
 		return err
 	}
 
-	err = gotv.unpinVersion()
-	if err != nil {
-		return err
-	}
+	fmt.Printf(`Pinned %s at %s.
 
-	fmt.Println("[Run]: cp -r", gotv.replaceHomeDir(toolchainDir), gotv.replaceHomeDir(gotv.pinnedToolchainDir))
-	err = util.CopyDir(toolchainDir, gotv.pinnedToolchainDir)
-	if err != nil {
-		return err
-	}
-
-	fmt.Printf(`
 Please put the following shown pinned toolchain path in
 your PATH environment variable to use go commands directly:
 
 	%s
 
-`, filepath.Join(gotv.pinnedToolchainDir, "bin"))
+`, tv, gotv.replaceHomeDir(gotv.pinnedToolchainDir), filepath.Join(gotv.pinnedToolchainDir, "bin"))
 
 	return nil
 }

@@ -17,7 +17,7 @@ import (
 )
 
 func (gotv *gotv) tryRunningGoToolchainCommand(tv toolchainVersion, args []string) error {
-	if _, err := gotv.ensureToolchainVersion(&tv); err != nil {
+	if _, err := gotv.ensureToolchainVersion(&tv, false); err != nil {
 		return err
 	}
 
@@ -70,12 +70,12 @@ func (gotv *gotv) normalizeToolchainVersion(tv *toolchainVersion) error {
 		return nil
 	}
 
-	panic("unreachable")
+	panic("unreachable. tv: " + tv.String())
 }
 
-func (gotv *gotv) ensureToolchainVersion(tv *toolchainVersion) (_ string, err error) {
+func (gotv *gotv) ensureToolchainVersion(tv *toolchainVersion, forPinning bool) (_ string, err error) {
 
-	if err := gotv.ensureGoRepository(false); err != nil {
+	if _, err := gotv.ensureGoRepository(tv.questioned); err != nil {
 		return "", err
 	}
 
@@ -95,7 +95,7 @@ func (gotv *gotv) ensureToolchainVersion(tv *toolchainVersion) (_ string, err er
 		if bootstrapTV == nil {
 			return "", errors.New("unable to build toolchain " + tv.String())
 		} else if bootstrapTV.kind != kind_Invalid {
-			bootstrapRoot, err = gotv.ensureToolchainVersion(bootstrapTV)
+			bootstrapRoot, err = gotv.ensureToolchainVersion(bootstrapTV, false)
 			if err != nil {
 				return "", err
 			}
@@ -110,8 +110,6 @@ func (gotv *gotv) ensureToolchainVersion(tv *toolchainVersion) (_ string, err er
 		}
 	}
 
-	var folder = tv.folderName()
-
 	var goCommandFilename string
 	if runtime.GOOS == "windows" {
 		goCommandFilename = "go.exe"
@@ -119,13 +117,34 @@ func (gotv *gotv) ensureToolchainVersion(tv *toolchainVersion) (_ string, err er
 		goCommandFilename = "go"
 	}
 
-	goCommandPath := filepath.Join(gotv.cacheDir, folder, "bin", goCommandFilename)
-	toolchainDir := filepath.Dir(filepath.Dir(goCommandPath))
-	defer func() {
-		if err == nil {
-			gotv.versionGoCmdPaths[*tv] = goCommandPath
-		}
-	}()
+	var goCommandPath, toolchainDir string
+	if forPinning {
+		toolchainDir = gotv.pinnedToolchainDir
+		goCommandPath = filepath.Join(toolchainDir, "bin", goCommandFilename)
+
+		// toolchainDir will be modify later.
+		var realToolchainDir = toolchainDir
+		defer func() {
+			if err != nil || realToolchainDir == toolchainDir {
+				return
+			}
+
+			err = os.RemoveAll(toolchainDir)
+			if err != nil && !errors.Is(err, fs.ErrNotExist) {
+				return
+			}
+			err = os.Rename(toolchainDir, realToolchainDir)
+		}()
+	} else {
+		goCommandPath = filepath.Join(gotv.cacheDir, tv.folderName(), "bin", goCommandFilename)
+		toolchainDir = filepath.Dir(filepath.Dir(goCommandPath))
+
+		defer func() {
+			if err == nil {
+				gotv.versionGoCmdPaths[*tv] = goCommandPath
+			}
+		}()
+	}
 
 	const gotvInfoFile = "gotv.info"
 
@@ -154,6 +173,11 @@ func (gotv *gotv) ensureToolchainVersion(tv *toolchainVersion) (_ string, err er
 		if !outdated {
 			return toolchainDir, nil
 		}
+	}
+
+	if forPinning {
+		toolchainDir = gotv.pinnedToolchainDir + "_temp"
+		goCommandPath = filepath.Join(toolchainDir, "bin", goCommandFilename)
 	}
 
 	if err := os.RemoveAll(toolchainDir); err != nil && !errors.Is(err, fs.ErrNotExist) {

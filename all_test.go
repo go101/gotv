@@ -59,12 +59,15 @@ func Test_parseGoToolchainVersion(t *testing.T) {
 		v  string
 		tv toolchainVersion
 	}{
-		{"1.19", toolchainVersion{kind_Release, "1.19"}},
-		{":1.19", toolchainVersion{kind_Alias, "1.19"}},
-		{":tip", toolchainVersion{kind_Alias, "tip"}},
-		{"bra:1.19", toolchainVersion{kind_Branch, "1.19"}},
-		{"tag:1.19", toolchainVersion{kind_Tag, "1.19"}},
-		{"rev:12ab", toolchainVersion{kind_Revision, "12ab"}},
+		{"1.19", toolchainVersion{kind_Release, "1.19", false}},
+		{"1.19!", toolchainVersion{kind_Release, "1.19", true}},
+		{":1.19", toolchainVersion{kind_Alias, "1.19", false}},
+		{":1.19!", toolchainVersion{kind_Alias, "1.19", true}},
+		{":tip", toolchainVersion{kind_Alias, "tip", false}},
+		{":tip!", toolchainVersion{kind_Alias, "tip", true}},
+		{"bra:1.19", toolchainVersion{kind_Branch, "1.19", false}},
+		{"tag:1.19", toolchainVersion{kind_Tag, "1.19", false}},
+		{"rev:12ab", toolchainVersion{kind_Revision, "12ab", false}},
 	}
 
 	for _, c := range cases {

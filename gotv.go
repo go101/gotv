@@ -24,6 +24,7 @@ type repoInfo struct {
 	allTags         map[string]string // tag name to hash hex
 	versionBranches map[string]string // simplified name to full branch name
 	allBranches     map[string]string // branch name to head hash hex
+	tipHash         string
 }
 
 func born() (_ gotv, err error) {

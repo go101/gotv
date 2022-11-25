@@ -1,6 +1,8 @@
 package main
 
 import (
+	"errors"
+	"fmt"
 	"sort"
 	"strconv"
 	"strings"
@@ -31,8 +33,9 @@ const (
 )
 
 type toolchainVersion struct {
-	kind    versionKind
-	version string
+	kind       versionKind
+	version    string
+	questioned bool
 }
 
 func (tv toolchainVersion) IsInvalid() (bool, string) {
@@ -56,7 +59,7 @@ func (tv toolchainVersion) String() string {
 		return ":" + tv.version
 	}
 
-	return "" // invalid
+	return fmt.Sprintf("{%v, %v}", tv.kind, tv.version) // invalid
 }
 
 func (tv toolchainVersion) folderName() string {
@@ -78,33 +81,41 @@ func (tv toolchainVersion) folderName() string {
 func parseGoToolchainVersion(arg string) toolchainVersion {
 	arg = strings.TrimSpace(arg)
 	if len(arg) == 0 {
-		return toolchainVersion{kind_Invalid, "version is unspecified"}
+		return toolchainVersion{kind_Invalid, "version is unspecified", false}
 	}
 
+	questioned := strings.HasSuffix(arg, "!")
+	if questioned {
+		arg = arg[:len(arg)-1]
+	}
+
+	if arg == "." {
+		return toolchainVersion{kind_Release, arg, questioned}
+	}
 	if c := arg[0]; '0' <= c && c <= '9' {
-		return toolchainVersion{kind_Release, trimTaillingDotZeros(arg)}
+		return toolchainVersion{kind_Release, trimTaillingDotZeros(arg), questioned}
 	}
 
 	i := strings.IndexByte(arg, ':')
 	if i < 0 {
-		return toolchainVersion{kind_Invalid, "unrecognized command or invalid version: " + arg}
+		return toolchainVersion{kind_Invalid, "unrecognized command or invalid version: " + arg, questioned}
 	}
 
 	kind, version := arg[:i], arg[i+1:]
 
 	if len(version) == 0 {
-		return toolchainVersion{kind_Invalid, "unspecified version for kind (" + kind + ")"}
+		return toolchainVersion{kind_Invalid, "unspecified version for kind (" + kind + ")", questioned}
 	}
 
 	switch kind {
 	default:
-		return toolchainVersion{kind_Invalid, "undetermined version kind: " + kind}
+		return toolchainVersion{kind_Invalid, "undetermined version kind: " + kind, questioned}
 	case "tag":
-		return toolchainVersion{kind_Tag, version}
+		return toolchainVersion{kind_Tag, version, questioned}
 	case "bra":
-		return toolchainVersion{kind_Branch, version}
+		return toolchainVersion{kind_Branch, version, questioned}
 	case "rev":
-		return toolchainVersion{kind_Revision, version}
+		return toolchainVersion{kind_Revision, version, questioned}
 	case "": // alias verisons
 	}
 
@@ -112,12 +123,38 @@ func parseGoToolchainVersion(arg string) toolchainVersion {
 
 	if version != "tip" {
 		if c := version[0]; c < '0' || c > '9' {
-			return toolchainVersion{kind_Invalid, "an alias version must be tip or a go version"}
+			return toolchainVersion{kind_Invalid, "an alias version must be tip or a go version", questioned}
 		}
 		version = trimTaillingDotZeros(version)
 	}
 
-	return toolchainVersion{kind_Alias, version}
+	return toolchainVersion{kind_Alias, version, questioned}
+}
+
+func parseGoToolchainVersions(versions ...string) ([]toolchainVersion, error) {
+	var tvs = make([]toolchainVersion, len(versions))
+	for i, version := range versions {
+		tvs[i] = parseGoToolchainVersion(version)
+		if invalid, message := tvs[i].IsInvalid(); invalid {
+			return nil, errors.New(message)
+		}
+	}
+	makeAtMostOneQuestioned(tvs)
+	return tvs, nil
+}
+
+func makeAtMostOneQuestioned(tvs []toolchainVersion) {
+	var questioned = false
+	for i := range tvs {
+		if tvs[i].questioned {
+			if questioned {
+				tvs[i].questioned = false
+			} else {
+				questioned = true
+				tvs[0].questioned = true
+			}
+		}
+	}
 }
 
 func trimTaillingDotZeros(version string) string {

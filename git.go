@@ -18,7 +18,25 @@ import (
 )
 
 func gitAuth(repoAddr string) (gittransport.AuthMethod, error) {
-	if strings.HasPrefix(repoAddr, "git@github.com:") {
+	var isSshProtocal bool
+	for {
+		addr := strings.ToLower(repoAddr)
+		if strings.HasPrefix(addr, "https://") {
+			break
+		}
+		isSshProtocal = strings.HasPrefix(addr, "ssh://")
+		if isSshProtocal {
+			break
+		}
+		if i := strings.IndexByte(addr, '@'); i >= 0 {
+			// also check ':' ?
+			isSshProtocal = true
+			break
+		}
+		break
+	}
+
+	if isSshProtocal {
 		var homeDir, err = os.UserHomeDir()
 		if err != nil {
 			return nil, err
@@ -44,7 +62,7 @@ func gitAuth(repoAddr string) (gittransport.AuthMethod, error) {
 		var sshKeyFilePath string
 		switch len(potentialKeys) {
 		case 0:
-			fmt.Println(`Need a ssh key to authenticate to Github.`)
+			fmt.Println(`Need a ssh key to authenticate to remote server.`)
 			for strings.TrimSpace(sshKeyFilePath) == "" {
 				fmt.Print(`Specify the key file here: `)
 				_, err = fmt.Scanln(&sshKeyFilePath)
@@ -55,7 +73,7 @@ func gitAuth(repoAddr string) (gittransport.AuthMethod, error) {
 			}
 
 		case 1:
-			fmt.Printf(`Need a ssh key to authenticate to Github.
+			fmt.Printf(`Need a ssh key to authenticate to remote server.
 Specify the key file here (Enter for %s): `, potentialKeys[0])
 			_, err = fmt.Scanln(&sshKeyFilePath)
 			if err != nil && !strings.Contains(err.Error(), "unexpected newline") {
@@ -67,7 +85,7 @@ Specify the key file here (Enter for %s): `, potentialKeys[0])
 			}
 
 		case 2:
-			fmt.Println(`Need a ssh key to authenticate to Github.
+			fmt.Println(`Need a ssh key to authenticate to remote server.
 The key file might be one of (but not limited to) the following ones:`)
 			for _, f := range potentialKeys {
 				fmt.Printf("* %s\n", f)
@@ -166,7 +184,12 @@ func gitPull(repoDir string) error {
 		Auth:  auth,
 		Force: true,
 	}
-	return worktree.Pull(&o)
+	err = worktree.Pull(&o)
+	if err != nil && err.Error() == "already up-to-date" {
+		err = nil
+	}
+
+	return err
 }
 
 func gitFetch(repoDir string) error {

@@ -13,11 +13,11 @@ import (
 	"go101.org/gotv/internal/util"
 )
 
-func (gotv *gotv) ensureGoRepository(pullOnExist bool) (err error) {
+func (gotv *gotv) ensureGoRepository(pullOnExist bool) (pulled bool, err error) {
 	_, err = os.Stat(gotv.repositoryDir)
 	if err != nil {
 		if !errors.Is(err, fs.ErrNotExist) {
-			return err
+			return
 		}
 	} else {
 		var okay = true
@@ -28,6 +28,9 @@ func (gotv *gotv) ensureGoRepository(pullOnExist bool) (err error) {
 
 		if okay {
 			if pullOnExist {
+				pulled = true
+
+				fmt.Println("[Run]: git pull -a (in " + gotv.replaceHomeDir(gotv.repositoryDir) + ")")
 				err = gitPull(gotv.repositoryDir)
 			}
 
@@ -35,12 +38,14 @@ func (gotv *gotv) ensureGoRepository(pullOnExist bool) (err error) {
 		} else {
 			err = os.RemoveAll(gotv.repositoryDir)
 			if err != nil {
-				return err
+				return
 			}
 		}
 	}
 
 	// clone it
+
+	pulled = true
 
 	defer func() {
 		if err != nil {
@@ -50,7 +55,7 @@ func (gotv *gotv) ensureGoRepository(pullOnExist bool) (err error) {
 
 	err = os.MkdirAll(gotv.cacheDir, 0700)
 	if err != nil {
-		return err
+		return
 	}
 
 	fmt.Println(`Please specify the Go project repositry git address.
@@ -66,7 +71,7 @@ Generally, it should be one of the following ones:
 		fmt.Print(`Specify it here: `)
 		_, err = fmt.Scanln(&repoAddr)
 		if err != nil && !strings.Contains(err.Error(), "unexpected newline") {
-			return err
+			return
 		}
 		repoAddr = strings.TrimSpace(repoAddr)
 	}
@@ -74,10 +79,10 @@ Generally, it should be one of the following ones:
 	fmt.Println("[Run]: git clone", gotv.replaceHomeDir(repoAddr), gotv.replaceHomeDir(gotv.repositoryDir))
 	err = gitClone(repoAddr, gotv.repositoryDir)
 	if err != nil {
-		return err
+		return
 	}
 
-	return nil
+	return
 }
 
 func (gotv *gotv) copyBranchShallowly(tv toolchainVersion, toDir string) error {
@@ -139,9 +144,11 @@ func collectRepositoryInfo(repoDir string) (repoInfo repoInfo, err error) {
 
 	repoInfo.allBranches = branches
 	repoInfo.versionBranches = make(map[string]string, len(branches))
-	for b := range branches {
+	for b, hash := range branches {
 		if ms := releaseBranchRegexp.FindAllStringSubmatch(b, 1); len(ms) > 0 {
 			repoInfo.versionBranches[ms[0][2]] = ms[0][1]
+		} else if b == "master" {
+			repoInfo.tipHash = hash
 		}
 	}
 
