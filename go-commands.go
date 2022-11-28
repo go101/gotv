@@ -231,6 +231,7 @@ func (gotv *gotv) ensureToolchainVersion(tv *toolchainVersion, forPinning bool) 
 		return "", err
 	}
 
+	infoFilePath = filepath.Join(toolchainDir, gotvInfoFile)
 	var buf bytes.Buffer
 	fmt.Fprintf(&buf, `{"revision": "%s"}`, revision)
 	if err := os.WriteFile(infoFilePath, buf.Bytes(), 0644); err != nil {
