@@ -129,10 +129,6 @@ func (gotv *gotv) ensureToolchainVersion(tv *toolchainVersion, forPinning bool) 
 				return
 			}
 
-			err = os.RemoveAll(toolchainDir)
-			if err != nil && !errors.Is(err, fs.ErrNotExist) {
-				return
-			}
 			err = os.Rename(toolchainDir, realToolchainDir)
 		}()
 	} else {
@@ -147,15 +143,14 @@ func (gotv *gotv) ensureToolchainVersion(tv *toolchainVersion, forPinning bool) 
 	}
 
 	const gotvInfoFile = "gotv.info"
-
 	type InfoFile struct {
 		Revision string `json:"revision"`
 	}
-
 	var infoFilePath = filepath.Join(toolchainDir, gotvInfoFile)
+
 	var revision = gotv.toolchainVersion2Revision(*tv)
 
-	if _, err := os.Stat(goCommandPath); err != nil {
+	if _, err := os.Stat(infoFilePath); err != nil {
 		if !errors.Is(err, fs.ErrNotExist) {
 			return "", err
 		}
@@ -178,6 +173,7 @@ func (gotv *gotv) ensureToolchainVersion(tv *toolchainVersion, forPinning bool) 
 	if forPinning {
 		toolchainDir = gotv.pinnedToolchainDir + "_temp"
 		goCommandPath = filepath.Join(toolchainDir, "bin", goCommandFilename)
+		infoFilePath = filepath.Join(toolchainDir, gotvInfoFile)
 	}
 
 	if err := os.RemoveAll(toolchainDir); err != nil && !errors.Is(err, fs.ErrNotExist) {
@@ -231,7 +227,6 @@ func (gotv *gotv) ensureToolchainVersion(tv *toolchainVersion, forPinning bool) 
 		return "", err
 	}
 
-	infoFilePath = filepath.Join(toolchainDir, gotvInfoFile)
 	var buf bytes.Buffer
 	fmt.Fprintf(&buf, `{"revision": "%s"}`, revision)
 	if err := os.WriteFile(infoFilePath, buf.Bytes(), 0644); err != nil {

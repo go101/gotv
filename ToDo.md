@@ -12,7 +12,7 @@
 * gotv list-versions [-cached] [-pinned] [-releases] [-branches] [-incomplete]
 * gotv cache-version [ToolchainVersion ...]
 	* none for listing
-*gotv uncache-version [ToolchainVersion ...]
+* gotv uncache-version [ToolchainVersion ...]
 	* none for all
 
 * replace /home/user/.cache to $HOME/.cache in all outputs
