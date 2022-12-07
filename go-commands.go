@@ -129,6 +129,11 @@ func (gotv *gotv) ensureToolchainVersion(tv *toolchainVersion, forPinning bool) 
 				return
 			}
 
+			err = os.RemoveAll(realToolchainDir)
+			if err != nil {
+				return
+			}
+
 			err = os.Rename(toolchainDir, realToolchainDir)
 		}()
 	} else {

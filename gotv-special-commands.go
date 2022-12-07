@@ -232,9 +232,27 @@ func (gotv *gotv) uncacheVersion(versions ...string) error {
 
 		var folder = tvs[i].folderName()
 		var toolchainDir = filepath.Join(gotv.cacheDir, folder)
-		if err := os.RemoveAll(toolchainDir); err != nil && !errors.Is(err, fs.ErrNotExist) {
+		if _, err := os.Stat(toolchainDir); err != nil {
+			if errors.Is(err, fs.ErrNotExist) {
+				fmt.Printf("Vesion %s is not cached.\n", &tvs[i])
+				continue
+			}
 			return err
 		}
+
+		fmt.Print("[Run]: rm -rf", gotv.replaceHomeDir(toolchainDir))
+		err := os.RemoveAll(toolchainDir)
+		fmt.Print(err)
+		if err == nil {
+			fmt.Println()
+			continue
+		}
+
+		//if errors.Is(err, fs.ErrNotExist) {
+		//	fmt.Println(" (not found)")
+		//}
+
+		return err
 	}
 
 	return nil
