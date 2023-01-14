@@ -213,18 +213,22 @@ func (gotv *gotv) ensureToolchainVersion(tv *toolchainVersion, forPinning bool) 
 	var toolchainSrcDir = filepath.Dir(makeScript)
 	fmt.Println("[Run]:", gotv.replaceHomeDir(makeScript))
 
-	var envs []string
-	if runtime.GOOS == "windows" {
-		if bootstrapRoot != "" {
-			envs = []string{"CGO_ENABLED=0", "GOROOT_BOOTSTRAP=" + bootstrapRoot}
-		} else {
-			envs = []string{"CGO_ENABLED=0"}
+	buildEnvs := func() []string {
+		var envs []string
+		if runtime.GOOS == "windows" {
+			if bootstrapRoot != "" {
+				envs = []string{"CGO_ENABLED=0", "GOROOT_BOOTSTRAP=" + bootstrapRoot}
+			} else {
+				envs = []string{"CGO_ENABLED=0"}
+			}
+		} else if bootstrapRoot != "" {
+			envs = []string{"GOROOT_BOOTSTRAP=" + bootstrapRoot}
 		}
-	} else if bootstrapRoot != "" {
-		envs = []string{"GOROOT_BOOTSTRAP=" + bootstrapRoot}
+
+		return envs
 	}
 
-	if _, err := util.RunShell(time.Hour, toolchainSrcDir, envs, os.Stdout, os.Stdout, makeScript); err != nil {
+	if _, err := util.RunShell(time.Hour, toolchainSrcDir, buildEnvs, os.Stdout, os.Stdout, makeScript); err != nil {
 		return "", err
 	}
 
@@ -255,6 +259,21 @@ func (gotv *gotv) runGoToolchainCommand(tv toolchainVersion, args []string) erro
 		fmt.Print(" ", a)
 	}
 	fmt.Println()
+
+	// change PATH env var
+	{
+		goBinPath := filepath.Dir(goCommandPath)
+		oldpath, newpath := os.Getenv("PATH"), ""
+		if oldpath == "" {
+			newpath = goBinPath
+		} else {
+			newpath = goBinPath + string(os.PathListSeparator) + oldpath
+		}
+		os.Setenv("PATH", newpath)
+		defer func() {
+			os.Setenv("PATH", oldpath)
+		}()
+	}
 	_, err := util.RunShellCommand(time.Hour, "", nil, os.Stdout, os.Stderr, goCommandPath, args...)
 	if err != nil {
 		if ee, ok := err.(*exec.ExitError); ok { // always okay

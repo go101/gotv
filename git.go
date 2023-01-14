@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/hex"
 	"fmt"
-	"net"
+	//"net"
 	"os"
 	"path/filepath"
 	"strings"
@@ -122,16 +122,18 @@ The key file might be one of (but not limited to) the following ones:`)
 				return nil, err
 			}
 		}
-		hostKeyCallback := func(hostname string, remote net.Addr, key ssh.PublicKey) error {
-			return nil
-		}
+		//hostKeyCallback := func(hostname string, remote net.Addr, key ssh.PublicKey) error {
+		//	return nil
+		//}
 
 		return &gitssh.PublicKeys{
 			User:   "git",
 			Signer: signer,
-			HostKeyCallbackHelper: gitssh.HostKeyCallbackHelper{
-				HostKeyCallback: hostKeyCallback,
-			},
+
+			// Since go-git v5.5.0, this field is gone.
+			//HostKeyCallbackHelper: gitssh.HostKeyCallbackHelper{
+			//	HostKeyCallback: hostKeyCallback,
+			//},
 		}, nil
 	}
 
