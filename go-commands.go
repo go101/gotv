@@ -215,20 +215,29 @@ func (gotv *gotv) ensureToolchainVersion(tv *toolchainVersion, forPinning bool) 
 
 	buildEnvs := func() []string {
 		var envs []string
-		if runtime.GOOS == "windows" {
-			if bootstrapRoot != "" {
-				envs = []string{"CGO_ENABLED=0", "GOROOT_BOOTSTRAP=" + bootstrapRoot}
-			} else {
-				envs = []string{"CGO_ENABLED=0"}
-			}
-		} else if bootstrapRoot != "" {
-			envs = []string{"GOROOT_BOOTSTRAP=" + bootstrapRoot}
+		//if runtime.GOOS == "windows" {
+		if bootstrapRoot != "" {
+			envs = []string{"CGO_ENABLED=0", "GOROOT_BOOTSTRAP=" + bootstrapRoot}
+		} else {
+			envs = []string{"CGO_ENABLED=0"}
 		}
+		//} else if bootstrapRoot != "" {
+		//	envs = []string{"GOROOT_BOOTSTRAP=" + bootstrapRoot}
+		//}
 
 		return envs
 	}
 
-	if _, err := util.RunShell(time.Hour, toolchainSrcDir, buildEnvs, os.Stdout, os.Stdout, makeScript); err != nil {
+	//if oldwd, err2 := os.Getwd(); err != nil {
+	//	return "", err2
+	//} else if err2 := os.Chdir(toolchainSrcDir); err != nil {
+	//	return "", err2
+	//} else {
+	//	defer func() {
+	//		err = os.Chdir(oldwd)
+	//	}()
+	//}
+	if _, err := util.RunShell(time.Hour, toolchainSrcDir, buildEnvs, os.Stdout, nil, makeScript); err != nil {
 		return "", err
 	}
 
@@ -274,7 +283,7 @@ func (gotv *gotv) runGoToolchainCommand(tv toolchainVersion, args []string) erro
 			os.Setenv("PATH", oldpath)
 		}()
 	}
-	_, err := util.RunShellCommand(time.Hour, "", nil, os.Stdout, os.Stderr, goCommandPath, args...)
+	_, err := util.RunShellCommand(time.Hour, "", nil, os.Stdout, nil, goCommandPath, args...)
 	if err != nil {
 		if ee, ok := err.(*exec.ExitError); ok { // always okay
 			os.Exit(ee.ExitCode())

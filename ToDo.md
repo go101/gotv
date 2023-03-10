@@ -4,6 +4,8 @@
     check if cached, if true, then copy to pin dir and write a file.
     if false, cached it in a temp dir, then rename it to pin dir
 
+* cache/uncache-version -> install/uninstall-version ?
+
 * download pre-built release bootstrap and other release packages.
   from https://dl.google.com,
   so that no go installation is needed to process.
@@ -51,3 +53,5 @@
   use Go 1.19rc1 to build Go 1.19?
   Using a lower version will make the go command in 1.19 not recognize GOMEMLIMIT env var.
   Or a version itself (built with an older verison and pin it firstly) to build the version.
+
+* https://go.dev/VERSION?m=text check lastest released version

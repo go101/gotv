@@ -26,23 +26,27 @@ func RunShellCommand(timeout time.Duration, wd string, buildEnv func() []string,
 	command := exec.CommandContext(ctx, cmd, args...)
 	command.Dir = wd
 	if buildEnv != nil {
-		command.Env = buildEnv()
+		command.Env = append(os.Environ(), buildEnv()...)
 	}
 	var output []byte
+	var erroutput bytes.Buffer
+	command.Stderr = &erroutput
 	var err error
 	if stdout != nil || stderr != nil {
 		command.Stdout = stdout
-		command.Stderr = stderr
 		err = command.Run()
 	} else {
-		var erroutput bytes.Buffer
-		command.Stderr = &erroutput
 		output, err = command.Output()
-		if err != nil {
-			if erroutput.Len() > 0 {
-				err = fmt.Errorf("%w\n\n%s", err, erroutput.Bytes())
-			}
+	}
+	if err != nil {
+		if erroutput.Len() > 0 {
+			err = fmt.Errorf("%w\n\n%s", err, erroutput.Bytes())
 		}
+	} else if erroutput.Len() > 0 {
+		err = fmt.Errorf("%s", erroutput.Bytes())
+	}
+	if stderr != nil {
+		io.Copy(stderr, &erroutput)
 	}
 
 	return output, err
