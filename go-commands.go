@@ -283,7 +283,7 @@ func (gotv *gotv) runGoToolchainCommand(tv toolchainVersion, args []string) erro
 			os.Setenv("PATH", oldpath)
 		}()
 	}
-	_, err := util.RunShellCommand(time.Hour, "", nil, os.Stdout, nil, goCommandPath, args...)
+	_, err := util.RunShellCommand(time.Hour, "", nil, os.Stdout, os.Stderr, goCommandPath, args...)
 	if err != nil {
 		if ee, ok := err.(*exec.ExitError); ok { // always okay
 			os.Exit(ee.ExitCode())
