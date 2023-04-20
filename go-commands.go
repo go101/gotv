@@ -283,7 +283,12 @@ func (gotv *gotv) runGoToolchainCommand(tv toolchainVersion, args []string) erro
 			os.Setenv("PATH", oldpath)
 		}()
 	}
-	_, err := util.RunShellCommand(time.Hour, "", nil, os.Stdout, os.Stderr, goCommandPath, args...)
+	buildEnv := func() []string {
+		return []string{
+			"GOTOOLCHAIN=local", // https://github.com/golang/go/issues/57001
+		}
+	}
+	_, err := util.RunShellCommand(time.Hour, "", buildEnv, os.Stdout, os.Stderr, goCommandPath, args...)
 	if err != nil {
 		if ee, ok := err.(*exec.ExitError); ok { // always okay
 			os.Exit(ee.ExitCode())
