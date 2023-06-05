@@ -5,8 +5,8 @@
 It is kinda of a re-implementation of [gvm](https://github.com/moovweb/gvm) but with a different command set.
 Each Go toolchain version is built from the Go git repository.
 
-This tool is mainly built for me to check differeces of official Go toolchain verisons in writing [Go 101 books](https://go101.org).
+This tool is mainly built for me to check differeces of official Go toolchain verisons during writing [Go 101 books](https://go101.org).
 
 ## Installation and Usage
 
-Please visit https://go101.org/apps-and-libs/gotv.html to details.
+Please visit https://go101.org/apps-and-libs/gotv.html for details.
