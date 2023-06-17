@@ -286,7 +286,7 @@ func (gotv *gotv) runGoToolchainCommand(tv toolchainVersion, args []string) erro
 	buildEnv := func() []string {
 		return []string{
 			// https://github.com/golang/go/issues/57001
-			"GOTOOLCHAIN=default",
+			"GOTOOLCHAIN=local",
 		}
 	}
 	_, err := util.RunShellCommand(time.Hour, "", buildEnv, os.Stdout, os.Stderr, goCommandPath, args...)
