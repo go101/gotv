@@ -15,7 +15,12 @@ func init() {
 		panic(err)
 	}
 
-	gotvForTesting, err = bornWithCacheDir(cacheDir)
+	configDir, err := os.MkdirTemp("", "gotv-config-*")
+	if err != nil {
+		panic(err)
+	}
+
+	gotvForTesting, err = bornWithCacheAndConfigDir(cacheDir, configDir)
 	if err != nil {
 		panic(err)
 	}
