@@ -25,13 +25,18 @@ func (gotv *gotv) tryRunningGoToolchainCommand(tv toolchainVersion, args []strin
 }
 
 // After normalization, tv.kind may be only tag/brranch/revision
-func (gotv *gotv) normalizeToolchainVersion(tv *toolchainVersion) error {
+func (gotv *gotv) normalizeToolchainVersion(tv *toolchainVersion, dontChangeKind bool) error {
 	if tv.kind == kind_Tag || tv.kind == kind_Branch || tv.kind == kind_Revision {
 		return nil
 	}
 
 	if tv.kind == kind_Release {
-		if strings.HasSuffix(tv.version, ".") {
+		var checkLatest = strings.HasSuffix(tv.version, ".")
+		if !checkLatest {
+			checkLatest = tv.version >= "1.21" && strings.Count(tv.version, ".") == 1
+		}
+
+		if checkLatest {
 			var prefix = tv.version[:len(tv.version)-1]
 			var latest = ""
 			for tag := range gotv.repoInfo.releaseTags {
@@ -46,6 +51,11 @@ func (gotv *gotv) normalizeToolchainVersion(tv *toolchainVersion) error {
 			}
 
 			tv.version = latest
+		}
+
+		if dontChangeKind {
+			// For setDefaultVersion
+			return nil
 		}
 
 		if v := gotv.repoInfo.releaseTags[tv.version]; v == "" {
@@ -75,7 +85,7 @@ func (gotv *gotv) normalizeToolchainVersion(tv *toolchainVersion) error {
 
 func (gotv *gotv) ensureToolchainVersion(tv *toolchainVersion, forPinning bool) (_ string, err error) {
 
-	if _, err := gotv.ensureGoRepository(tv.questioned); err != nil {
+	if _, err := gotv.ensureGoRepository(tv.ForceSyncRepo); err != nil {
 		return "", err
 	}
 
@@ -85,7 +95,7 @@ func (gotv *gotv) ensureToolchainVersion(tv *toolchainVersion, forPinning bool) 
 		gotv.repoInfo = repoInfo
 	}
 
-	if err := gotv.normalizeToolchainVersion(tv); err != nil {
+	if err := gotv.normalizeToolchainVersion(tv, false); err != nil {
 		return "", err
 	}
 

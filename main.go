@@ -51,14 +51,59 @@ func main() {
 	}
 
 	tv := parseGoToolchainVersion(args[0])
-	if invalid, message := tv.IsInvalid(); invalid {
+	if tv.kind == kind_Default {
+		tv = gotv.DefaultVersion()
+		if invalid, _ := tv.IsInvalid(); invalid {
+			printSetDefaultVersion(program)
+			os.Exit(1)
+		}
+
+		// fmt.Println("Use default version:", tv)
+
+		if err := gotv.tryRunningGoToolchainCommand(tv, args); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+	} else if invalid, message := tv.IsInvalid(); invalid {
 		fmt.Fprintln(os.Stderr, message)
 		os.Exit(1)
+	} else {
+		if err := gotv.tryRunningGoToolchainCommand(tv, args[1:]); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
 	}
-	if err := gotv.tryRunningGoToolchainCommand(tv, args[1:]); err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
+}
+
+const descToolchainVersion = `where ToolchainVersion might be
+	* a Go release version, such as 1.17.13, 1.18,
+	  and 1.19rc1, which mean the release tags
+	  go1.17.13, go1.18, go1.19rc1, respectively,
+	  in the Go git repository.
+	  Note:
+	  * 1.N. means the latest release of Go 1.N
+	    versions. If N >= 21, then 1.N also means
+	    the latest release of Go 1.N versions.
+	  * 1. means the latest Go 1 release verison.
+	  * . means the latest Go release version.
+	* :tip, which means the local latest master
+	  branch in the Go git repository.
+	* :N.M, such as :1.17, :1.18 and :1.19, which mean
+	  the local latest release-branch.goN.M branch
+	  in the Go git repository.`
+
+func printSetDefaultVersion(program string) {
+	fmt.Fprintf(os.Stderr, `It looks you want to use the default toolchain version,
+but it has not been set yet. Please run the following
+command to set it:
+
+	%s default-version ToolchainVersion
+
+	%s
+`,
+		filepath.Base(program),
+		descToolchainVersion,
+	)
 }
 
 func printUsage(program string) {
@@ -67,20 +112,7 @@ func printUsage(program string) {
 Usage (to use a specific Go toolchain version):
 	%s ToolchainVersion [go-arguments...]
 
-	where ToolchainVersion might be
-	* a Go release version, such as 1.17.13, 1.18,
-	  and 1.19rc1, which mean the release tags
-	  go1.17.13, go1.18, go1.19rc1, respectively,
-	  in the Go git repository.
-	  Note:
-	  * 1.N. means the latest release of 1.N
-	  * 1. means the latest Go 1 release verison
-	  * . means the latest Go release version
-	* :tip, which means the local latest master
-	  branch in the Go git repository.
-	* :N.M, such as :1.17, :1.18 and :1.19, which mean
-	  the local latest release-branch.goN.M branch
-	  in the Go git repository.
+	%s
 
 	A ToolchainVersion suffixed with ! means remote
 	versions are needed to be fetched firstly.
@@ -98,13 +130,16 @@ GoTV specific commands:
 		pin a specified version
 	gotv unpin-version
 		unpin the current pinned version
+	gotv default-version ToolchainVersion
+		set the default version
 `,
 		Version,
 		filepath.Base(program),
+		descToolchainVersion,
 	)
 }
 
-const Version = "v0.2.0"
+const Version = "v0.2.1-preview"
 
 func releaseGoTV() {
 	if _, err := util.RunShell(time.Minute*3, "", nil, nil, nil, "go", "test", "./..."); err != nil {

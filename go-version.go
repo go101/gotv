@@ -16,6 +16,8 @@ type versionKind int
 const (
 	kind_Invalid versionKind = iota // must be 0
 
+	kind_Default
+
 	kind_Tag
 	kind_Branch
 	kind_Revision
@@ -33,14 +35,16 @@ const (
 )
 
 type toolchainVersion struct {
-	kind       versionKind
-	version    string
-	questioned bool
+	kind          versionKind
+	version       string
+	ForceSyncRepo bool
 }
 
 func (tv toolchainVersion) IsInvalid() (bool, string) {
 	if tv.kind == kind_Invalid {
 		return true, tv.version
+	} else if tv.kind == kind_Default {
+		return true, "bad default version use scenario"
 	}
 	return false, ""
 }
@@ -84,38 +88,46 @@ func parseGoToolchainVersion(arg string) toolchainVersion {
 		return toolchainVersion{kind_Invalid, "version is unspecified", false}
 	}
 
-	questioned := strings.HasSuffix(arg, "!")
-	if questioned {
-		arg = arg[:len(arg)-1]
+	ForceSyncRepo := strings.HasSuffix(arg, "!")
+	if ForceSyncRepo {
+		arg = strings.TrimSpace(arg[:len(arg)-1])
+
+		if len(arg) == 0 {
+			return toolchainVersion{kind_Invalid, "! should not be used solely as an argument", true}
+		}
 	}
 
 	if arg == "." {
-		return toolchainVersion{kind_Release, arg, questioned}
+		return toolchainVersion{kind_Release, arg, ForceSyncRepo}
 	}
 	if c := arg[0]; '0' <= c && c <= '9' {
-		return toolchainVersion{kind_Release, trimTaillingDotZeros(arg), questioned}
+		return toolchainVersion{kind_Release, trimTaillingDotZeros(arg), ForceSyncRepo}
 	}
 
 	i := strings.IndexByte(arg, ':')
 	if i < 0 {
-		return toolchainVersion{kind_Invalid, "unrecognized command or invalid version: " + arg, questioned}
+		if ForceSyncRepo {
+			return toolchainVersion{kind_Invalid, "unrecognized command or invalid version: " + arg, ForceSyncRepo}
+		}
+		// View arg as a go command.
+		return toolchainVersion{kind_Default, "", false} // kind_Default and ForceSyncRepo always conflicts.
 	}
 
 	kind, version := arg[:i], arg[i+1:]
 
 	if len(version) == 0 {
-		return toolchainVersion{kind_Invalid, "unspecified version for kind (" + kind + ")", questioned}
+		return toolchainVersion{kind_Invalid, "unspecified version for kind (" + kind + ")", ForceSyncRepo}
 	}
 
 	switch kind {
 	default:
-		return toolchainVersion{kind_Invalid, "undetermined version kind: " + kind, questioned}
+		return toolchainVersion{kind_Invalid, "undetermined version kind: " + kind, ForceSyncRepo}
 	case "tag":
-		return toolchainVersion{kind_Tag, version, questioned}
+		return toolchainVersion{kind_Tag, version, ForceSyncRepo}
 	case "bra":
-		return toolchainVersion{kind_Branch, version, questioned}
+		return toolchainVersion{kind_Branch, version, ForceSyncRepo}
 	case "rev":
-		return toolchainVersion{kind_Revision, version, questioned}
+		return toolchainVersion{kind_Revision, version, ForceSyncRepo}
 	case "": // alias verisons
 	}
 
@@ -123,12 +135,12 @@ func parseGoToolchainVersion(arg string) toolchainVersion {
 
 	if version != "tip" {
 		if c := version[0]; c < '0' || c > '9' {
-			return toolchainVersion{kind_Invalid, "an alias version must be tip or a go version", questioned}
+			return toolchainVersion{kind_Invalid, "an alias version must be tip or a go version", ForceSyncRepo}
 		}
 		version = trimTaillingDotZeros(version)
 	}
 
-	return toolchainVersion{kind_Alias, version, questioned}
+	return toolchainVersion{kind_Alias, version, ForceSyncRepo}
 }
 
 func parseGoToolchainVersions(versions ...string) ([]toolchainVersion, error) {
@@ -139,19 +151,19 @@ func parseGoToolchainVersions(versions ...string) ([]toolchainVersion, error) {
 			return nil, errors.New(message)
 		}
 	}
-	makeAtMostOneQuestioned(tvs)
+	makeAtMostOneForceSyncRepo(tvs)
 	return tvs, nil
 }
 
-func makeAtMostOneQuestioned(tvs []toolchainVersion) {
-	var questioned = false
+func makeAtMostOneForceSyncRepo(tvs []toolchainVersion) {
+	var ForceSyncRepo = false
 	for i := range tvs {
-		if tvs[i].questioned {
-			if questioned {
-				tvs[i].questioned = false
+		if tvs[i].ForceSyncRepo {
+			if ForceSyncRepo {
+				tvs[i].ForceSyncRepo = false
 			} else {
-				questioned = true
-				tvs[0].questioned = true
+				ForceSyncRepo = true
+				tvs[0].ForceSyncRepo = true
 			}
 		}
 	}
@@ -213,19 +225,26 @@ func compareVersions(x, y string) bool {
 	return true
 }
 
-// ToDo:
 // Return nil for failed to find the steps.
+// The input tv should have been normalized,
+// sotv.kind may be only tag/brranch/revision.
 func determineBootstrapToolchainVersion(tv toolchainVersion) *toolchainVersion {
+	switch tv.kind {
+	case kind_Tag:
+		// Now versions <= 1.5.n are not supported.
+		// Version 1.6 - 1.12.n are built with Go 1.15.15.
+		// Versions 1.13 - 1.21.n are built with Go 1.17.13.
+		// Higher versions are built with Go 1.20.n.
+		return &toolchainVersion{kind: kind_Invalid}
+	case kind_Branch:
+		// ToDo: convert to latest tag for this branch.
+		return &toolchainVersion{kind: kind_Invalid}
+	case kind_Revision:
+		// ToDo: read all revisions and find the closest tag, then ...
 
-	// Now versions <= 1.5.n are not supported.
-	// Version 1.6 - 1.12.n are built with Go 1.15.15.
-	// Versions 1.13 - 1.21.n are built with Go 1.17.13.
-	// Higher versions are built with Go 1.20.n.
+		// Try to use local toolchain installation.
+		return &toolchainVersion{kind: kind_Invalid}
+	}
 
-	// If the GOROOT_BOOTSTRAP env var is set, use it.
-
-	// If no cached versions yet, use system go toolchain.
-	// The system go toolchain is presented as an invalid version.
-
-	return &toolchainVersion{kind: kind_Invalid}
+	return nil
 }

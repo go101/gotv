@@ -45,6 +45,15 @@ func (gotv *gotv) tryRunningSpecialCommand(args []string) error {
 			return errors.New(`unpin-version needs no arguments`)
 		}
 		return gotv.unpinVersion()
+	case "default-version":
+		switch len(args) {
+		case 0:
+			return gotv.checkDefaultVersion()
+		case 1:
+			return gotv.setDefaultVersion(args[0])
+		default:
+			return errors.New(`default-version needs at least one argument`)
+		}
 	}
 
 	return unknownCommand{}
@@ -219,6 +228,9 @@ func (gotv *gotv) uncacheVersion(versions ...string) error {
 	}
 
 	gotv.repoInfo, err = collectRepositoryInfo(gotv.repositoryDir)
+	if err != nil {
+		return err
+	}
 
 	tvs, err := parseGoToolchainVersions(versions...)
 	if err != nil {
@@ -226,7 +238,7 @@ func (gotv *gotv) uncacheVersion(versions ...string) error {
 	}
 
 	for i := range tvs {
-		if err := gotv.normalizeToolchainVersion(&tvs[i]); err != nil {
+		if err := gotv.normalizeToolchainVersion(&tvs[i], false); err != nil {
 			return err
 		}
 
@@ -286,5 +298,39 @@ func (gotv *gotv) unpinVersion() error {
 		return err
 	}
 
+	return nil
+}
+
+func (gotv *gotv) setDefaultVersion(version string) (err error) {
+	var tv = parseGoToolchainVersion(version)
+	if invalid, message := tv.IsInvalid(); invalid {
+		err = errors.New(message)
+		return
+	}
+
+	gotv.repoInfo, err = collectRepositoryInfo(gotv.repositoryDir)
+	if err != nil {
+		return
+
+	}
+	if err = gotv.normalizeToolchainVersion(&tv, true); err != nil {
+		return
+	}
+
+	if err = gotv.changeDefaultVersion(tv); err != nil {
+		return
+	}
+
+	fmt.Println("Default version is set as:", tv)
+	return
+}
+
+func (gotv *gotv) checkDefaultVersion() error {
+	tv := gotv.DefaultVersion()
+	if invalid, _ := tv.IsInvalid(); invalid {
+		fmt.Println("Default version is not set.")
+	} else {
+		fmt.Println(tv)
+	}
 	return nil
 }

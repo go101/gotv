@@ -1,15 +1,28 @@
 
+* since Go 1.21, version "1.x" should be equvalent to "1.x.".
+  * remove line "*** You need to add ... to your PATH." in outout.
+
+* download pre-built release bootstrap versions wben needed.
+  from https://dl.google.com,
+  so that no go installation is needed to process (code: https://github.com/golang/dl).
+  * Downloaded bootstrap toolchains are also put in "tag_go1.x.y" folders,
+    and put a line "how: download | build" in gotv.info.
+
+* gotv set-default VERSION
+  then "gotv go-command ..." will use the default version
+  "default-version" dir only contains one file, which record a toolchainVersion.
+  * and put a line "why: default | cache" in gotv.info.
+
 * pin-version new implementation
   * check if pinned, if true, do nothing.
     check if cached, if true, then copy to pin dir and write a file.
     if false, cached it in a temp dir, then rename it to pin dir
+  * deprecate pinned-version and commands.
+    For backward-capacity, keep them, but must set GOTOOLCHAIN=local.
+    * Use a new implementation: build a speical "go" and "gofmt" commands
+      which will call a cached toolchain instaed (with set evn GOTOOLCHAIN=local).
 
 * cache/uncache-version -> install/uninstall-version ?
-
-* download pre-built release bootstrap and other release packages.
-  from https://dl.google.com,
-  so that no go installation is needed to process.
-  https://github.com/golang/dl
 
 * always set enve var GOTOOLCHAIN=local
 
@@ -38,7 +51,7 @@
   * and https://github.com/golang/go/issues/54265
   * create some bootstrap projects, embedding toolchain tar.gz in code.
     use "go install go101.org/bootstrap-xxx@latest" to download.
-    untar them in gotc_cache/dir/bootstrap-xxx
+    untar them in gotv_cache/dir/bootstrap-xxx
     * https://github.com/go101/bootstrap-go1.17.13
     * https://github.com/go101/bootstrap-go1.4
 
