@@ -254,7 +254,6 @@ func (gotv *gotv) uncacheVersion(versions ...string) error {
 
 		fmt.Print("[Run]: rm -rf", gotv.replaceHomeDir(toolchainDir))
 		err := os.RemoveAll(toolchainDir)
-		fmt.Print(err)
 		if err == nil {
 			fmt.Println()
 			continue

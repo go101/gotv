@@ -32,12 +32,15 @@ func (gotv *gotv) normalizeToolchainVersion(tv *toolchainVersion, dontChangeKind
 
 	if tv.kind == kind_Release {
 		var checkLatest = strings.HasSuffix(tv.version, ".")
+		var prefix string
 		if !checkLatest {
 			checkLatest = tv.version >= "1.21" && strings.Count(tv.version, ".") == 1
+			prefix = tv.version
+		} else {
+			prefix = tv.version[:len(tv.version)-1]
 		}
 
 		if checkLatest {
-			var prefix = tv.version[:len(tv.version)-1]
 			var latest = ""
 			for tag := range gotv.repoInfo.releaseTags {
 				if strings.HasPrefix(tag, prefix) {
@@ -46,6 +49,7 @@ func (gotv *gotv) normalizeToolchainVersion(tv *toolchainVersion, dontChangeKind
 					}
 				}
 			}
+
 			if latest == "" {
 				return fmt.Errorf("not latest version found for fake verison: %s", tv.version)
 			}
@@ -85,7 +89,7 @@ func (gotv *gotv) normalizeToolchainVersion(tv *toolchainVersion, dontChangeKind
 
 func (gotv *gotv) ensureToolchainVersion(tv *toolchainVersion, forPinning bool) (_ string, err error) {
 
-	if _, err := gotv.ensureGoRepository(tv.ForceSyncRepo); err != nil {
+	if _, err := gotv.ensureGoRepository(tv.forceSyncRepo); err != nil {
 		return "", err
 	}
 
@@ -114,7 +118,7 @@ func (gotv *gotv) ensureToolchainVersion(tv *toolchainVersion, forPinning bool) 
 			// but "make.bash" is able to.
 			goExePath, err := exec.LookPath("go")
 			if err != nil {
-				fmt.Println(err)
+				return "", err
 			}
 			bootstrapRoot = filepath.Dir(filepath.Dir(goExePath))
 		}
@@ -135,6 +139,7 @@ func (gotv *gotv) ensureToolchainVersion(tv *toolchainVersion, forPinning bool) 
 		// toolchainDir will be modify later.
 		var realToolchainDir = toolchainDir
 		defer func() {
+			// ToDo: realToolchainDir == toolchainDir is always false?
 			if err != nil || realToolchainDir == toolchainDir {
 				return
 			}
@@ -231,22 +236,10 @@ func (gotv *gotv) ensureToolchainVersion(tv *toolchainVersion, forPinning bool) 
 		} else {
 			envs = []string{"CGO_ENABLED=0"}
 		}
-		//} else if bootstrapRoot != "" {
-		//	envs = []string{"GOROOT_BOOTSTRAP=" + bootstrapRoot}
-		//}
 
 		return envs
 	}
 
-	//if oldwd, err2 := os.Getwd(); err != nil {
-	//	return "", err2
-	//} else if err2 := os.Chdir(toolchainSrcDir); err != nil {
-	//	return "", err2
-	//} else {
-	//	defer func() {
-	//		err = os.Chdir(oldwd)
-	//	}()
-	//}
 	if _, err := util.RunShell(time.Hour, toolchainSrcDir, buildEnvs, os.Stdout, nil, makeScript); err != nil {
 		return "", err
 	}
