@@ -1,4 +1,7 @@
 
+
+* "gotv :tip" print the tip version firstly
+
 * reimplement gtv commands for godev, but not build toolchains from git repo,
   but download from https://dl.google.com instead
 

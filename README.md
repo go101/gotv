@@ -3,7 +3,6 @@
 
 **gotv** is tool which provides a way to manage multiple versions of the official Go toolchain installations.
 It is kinda of a re-implementation of [gvm](https://github.com/moovweb/gvm) but with a different command set.
-With GoTV, a Go toolchain version is aenerally built from the Go project git repository.
 
 This tool is mainly built for me to check behavior differeces of different Go toolchain verisons during writing [Go 101 books](https://go101.org).
 
