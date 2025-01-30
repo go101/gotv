@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-func RunShellCommand(timeout time.Duration, wd string, buildEnv func() []string, stdout, stderr io.Writer, cmd string, args ...string) ([]byte, error) {
+func RunShellCommand(timeout time.Duration, wd string, buildEnv func() []string, stdin io.Reader, stdout, stderr io.Writer, cmd string, args ...string) ([]byte, error) {
 	if wd == "" {
 		var err error
 		wd, err = os.Getwd()
@@ -30,6 +30,7 @@ func RunShellCommand(timeout time.Duration, wd string, buildEnv func() []string,
 	}
 	var output []byte
 	var erroutput bytes.Buffer
+	command.Stdin = stdin
 	command.Stdout = stdout
 	if stderr != nil {
 		command.Stderr = stderr
@@ -63,10 +64,10 @@ func RunShellCommand(timeout time.Duration, wd string, buildEnv func() []string,
 	return output, err
 }
 
-func RunShell(timeout time.Duration, wd string, buildEnv func() []string, stdout, stderr io.Writer, cmdAndArgs ...string) ([]byte, error) {
+func RunShell(timeout time.Duration, wd string, buildEnv func() []string, stdin io.Reader, stdout, stderr io.Writer, cmdAndArgs ...string) ([]byte, error) {
 	if len(cmdAndArgs) == 0 {
 		panic("command is not specified")
 	}
 
-	return RunShellCommand(timeout, wd, buildEnv, stdout, stderr, cmdAndArgs[0], cmdAndArgs[1:]...)
+	return RunShellCommand(timeout, wd, buildEnv, stdin, stdout, stderr, cmdAndArgs[0], cmdAndArgs[1:]...)
 }

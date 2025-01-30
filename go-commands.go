@@ -240,7 +240,7 @@ func (gotv *gotv) ensureToolchainVersion(tv *toolchainVersion, forPinning bool) 
 		return envs
 	}
 
-	if _, err := util.RunShell(time.Hour, toolchainSrcDir, buildEnvs, os.Stdout, nil, makeScript); err != nil {
+	if _, err := util.RunShell(time.Hour, toolchainSrcDir, buildEnvs, nil, os.Stdout, nil, makeScript); err != nil {
 		return "", err
 	}
 
@@ -292,7 +292,7 @@ func (gotv *gotv) runGoToolchainCommand(tv toolchainVersion, args []string) erro
 			"GOTOOLCHAIN=local",
 		}
 	}
-	_, err := util.RunShellCommand(time.Hour, "", buildEnv, os.Stdout, os.Stderr, goCommandPath, args...)
+	_, err := util.RunShellCommand(time.Hour, "", buildEnv, os.Stdin, os.Stdout, os.Stderr, goCommandPath, args...)
 	if err != nil {
 		if ee, ok := err.(*exec.ExitError); ok { // always okay
 			os.Exit(ee.ExitCode())

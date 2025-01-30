@@ -142,15 +142,15 @@ GoTV specific commands:
 const Version = "v0.2.3-preview"
 
 func releaseGoTV() {
-	if _, err := util.RunShell(time.Minute*3, "", nil, nil, nil, "go", "test", "./..."); err != nil {
+	if _, err := util.RunShell(time.Minute*3, "", nil, nil, nil, nil, "go", "test", "./..."); err != nil {
 		log.Println("go test error:", err)
 		return
 	}
-	if _, err := util.RunShell(time.Minute*3, "", nil, nil, nil, "go", "fmt", "./..."); err != nil {
+	if _, err := util.RunShell(time.Minute*3, "", nil, nil, nil, nil, "go", "fmt", "./..."); err != nil {
 		log.Println("go fmt error:", err)
 		return
 	}
-	if _, err := util.RunShell(time.Minute*3, "", nil, nil, nil, "go", "mod", "tidy"); err != nil {
+	if _, err := util.RunShell(time.Minute*3, "", nil, nil, nil, nil, "go", "mod", "tidy"); err != nil {
 		log.Println("go mod tidy error:", err)
 		return
 	}
@@ -253,11 +253,11 @@ func releaseGoTV() {
 	}
 
 	var gitTag = fmt.Sprintf("v%s", newVersion)
-	if output, err := util.RunShellCommand(time.Second*5, "", nil, nil, nil,
+	if output, err := util.RunShellCommand(time.Second*5, "", nil, nil, nil, nil,
 		"git", "commit", "-a", "-m", gitTag); err != nil {
 		log.Printf("git commit error: %s\n%s", err, output)
 	}
-	if output, err := util.RunShellCommand(time.Second*5, "", nil, nil, nil,
+	if output, err := util.RunShellCommand(time.Second*5, "", nil, nil, nil, nil,
 		"git", "tag", gitTag); err != nil {
 		log.Printf("git commit error: %s\n%s", err, output)
 	}

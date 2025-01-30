@@ -1,4 +1,5 @@
 
+* `gotv default-version` should support `1.n.`, `1.n`, `1.`, `.` etc pseudo version.
 
 * "gotv :tip" print the tip version firstly
 
