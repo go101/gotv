@@ -18,19 +18,19 @@ func (unknownCommand) Error() string {
 func (gotv *gotv) tryRunningSpecialCommand(args []string) error {
 	command, args := args[0], args[1:]
 	switch command {
-	case "fetch-versions":
+	case "fetch-version", "fetch-versions":
 		if len(args) > 0 {
 			return errors.New(`fetch-versions needs no arguments`)
 		}
 		return gotv.fetchVersions()
-	case "list-versions":
+	case "list-version", "list-versions":
 		return gotv.listVersions(args...)
-	case "cache-version":
+	case "cache-version", "cache-versions":
 		if len(args) == 0 {
 			return errors.New(`cache-version needs at least one argument`)
 		}
 		return gotv.cacheVersion(args...)
-	case "uncache-version":
+	case "uncache-version", "uncache-versions":
 		if len(args) == 0 {
 			return errors.New(`uncache-version needs at least one argument`)
 		}
@@ -270,7 +270,7 @@ func (gotv *gotv) uncacheVersion(versions ...string) error {
 }
 
 func (gotv *gotv) pinVersion(version string) error {
-	var tv = parseGoToolchainVersion(version)
+	var tv = parseGoToolchainVersion(version, true)
 	if invalid, message := tv.IsInvalid(); invalid {
 		return errors.New(message)
 	}
@@ -301,20 +301,19 @@ func (gotv *gotv) unpinVersion() error {
 }
 
 func (gotv *gotv) setDefaultVersion(version string) (err error) {
-	var tv = parseGoToolchainVersion(version)
+	var tv = parseGoToolchainVersion(version, true)
 	if invalid, message := tv.IsInvalid(); invalid {
 		err = errors.New(message)
 		return
 	}
 
-	gotv.repoInfo, err = collectRepositoryInfo(gotv.repositoryDir)
-	if err != nil {
-		return
-
-	}
-	if err = gotv.normalizeToolchainVersion(&tv, true); err != nil {
-		return
-	}
+	//gotv.repoInfo, err = collectRepositoryInfo(gotv.repositoryDir)
+	//if err != nil {
+	//	return
+	//}
+	//if err = gotv.normalizeToolchainVersion(&tv, true); err != nil {
+	//	return
+	//}
 
 	if err = gotv.changeDefaultVersion(tv); err != nil {
 		return

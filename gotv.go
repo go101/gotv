@@ -127,7 +127,7 @@ func (gotv *gotv) DefaultVersion() (tv toolchainVersion) {
 		return
 	}
 
-	return parseGoToolchainVersion(config.DefaultVersion)
+	return parseGoToolchainVersion(config.DefaultVersion, true)
 }
 
 func (gotv *gotv) changeDefaultVersion(tv toolchainVersion) (err error) {

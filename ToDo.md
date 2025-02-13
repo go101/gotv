@@ -1,5 +1,8 @@
 
-* `gotv default-version` should support `1.n.`, `1.n`, `1.`, `.` etc pseudo version.
+
+
+* "gotv uncache-version !." removes all non-latest versions
+  "gotv uncache-version !1.n" removes all not-latest version of 1.n
 
 * "gotv :tip" print the tip version firstly
 

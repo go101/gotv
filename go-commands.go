@@ -88,7 +88,6 @@ func (gotv *gotv) normalizeToolchainVersion(tv *toolchainVersion, dontChangeKind
 }
 
 func (gotv *gotv) ensureToolchainVersion(tv *toolchainVersion, forPinning bool) (_ string, err error) {
-
 	if _, err := gotv.ensureGoRepository(tv.forceSyncRepo); err != nil {
 		return "", err
 	}

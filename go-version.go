@@ -82,7 +82,7 @@ func (tv toolchainVersion) folderName() string {
 	return folder
 }
 
-func parseGoToolchainVersion(arg string) toolchainVersion {
+func parseGoToolchainVersion(arg string, argIsVersionForSure bool) toolchainVersion {
 	arg = strings.TrimSpace(arg)
 	if len(arg) == 0 {
 		return toolchainVersion{kind_Invalid, "version is unspecified", false}
@@ -101,15 +101,19 @@ func parseGoToolchainVersion(arg string) toolchainVersion {
 		return toolchainVersion{kind_Release, arg, forceSyncRepo}
 	}
 	if c := arg[0]; '0' <= c && c <= '9' {
-		return toolchainVersion{kind_Release, trimTaillingDotZeros(arg), forceSyncRepo}
+		if arg < "1.21" {
+			arg = trimTaillingDotZeros(arg)
+		}
+		return toolchainVersion{kind_Release, arg, forceSyncRepo}
 	}
 
 	i := strings.IndexByte(arg, ':')
 	if i < 0 {
-		if forceSyncRepo {
+		if forceSyncRepo || argIsVersionForSure {
 			return toolchainVersion{kind_Invalid, "unrecognized command or invalid version: " + arg, forceSyncRepo}
 		}
 		// View arg as a go command.
+
 		return toolchainVersion{kind_Default, "", false} // kind_Default and forceSyncRepo always conflicts.
 	}
 
@@ -146,7 +150,7 @@ func parseGoToolchainVersion(arg string) toolchainVersion {
 func parseGoToolchainVersions(versions ...string) ([]toolchainVersion, error) {
 	var tvs = make([]toolchainVersion, len(versions))
 	for i, version := range versions {
-		tvs[i] = parseGoToolchainVersion(version)
+		tvs[i] = parseGoToolchainVersion(version, true)
 		if invalid, message := tvs[i].IsInvalid(); invalid {
 			return nil, errors.New(message)
 		}

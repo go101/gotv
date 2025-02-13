@@ -64,6 +64,8 @@ func Test_parseGoToolchainVersion(t *testing.T) {
 		v  string
 		tv toolchainVersion
 	}{
+		{"1.21.0", toolchainVersion{kind_Release, "1.21.0", false}},
+		{"1.19.0", toolchainVersion{kind_Release, "1.19", false}},
 		{"1.19", toolchainVersion{kind_Release, "1.19", false}},
 		{"1.19!", toolchainVersion{kind_Release, "1.19", true}},
 		{":1.19", toolchainVersion{kind_Alias, "1.19", false}},
@@ -76,8 +78,8 @@ func Test_parseGoToolchainVersion(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		if r := parseGoToolchainVersion(c.v); r != c.tv {
-			t.Errorf(`parseGoToolchainVersion("%s") != %v, but %v`, c.v, c.tv, r)
+		if r := parseGoToolchainVersion(c.v, true); r != c.tv {
+			t.Errorf(`parseGoToolchainVersion("%s", true) != %v, but %v`, c.v, c.tv, r)
 		}
 	}
 }
