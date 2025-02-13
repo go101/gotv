@@ -54,7 +54,7 @@ func main() {
 		fmt.Print("No toolchain version is provided, try to use default version")
 		tv = gotv.DefaultVersion()
 		if invalid, _ := tv.IsInvalid(); invalid {
-			fmt.Println(".\n")
+			fmt.Print(".\n\n")
 			printSetDefaultVersion(program)
 			os.Exit(1)
 		}
@@ -140,7 +140,7 @@ GoTV specific commands:
 	)
 }
 
-const Version = "v0.2.4-preview"
+const Version = "v0.2.4"
 
 func releaseGoTV() {
 	if _, err := util.RunShell(time.Minute*3, "", nil, nil, nil, nil, "go", "test", "./..."); err != nil {
