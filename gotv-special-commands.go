@@ -252,10 +252,9 @@ func (gotv *gotv) uncacheVersion(versions ...string) error {
 			return err
 		}
 
-		fmt.Print("[Run]: rm -rf", gotv.replaceHomeDir(toolchainDir))
+		fmt.Println("[Run]: rm -rf", gotv.replaceHomeDir(toolchainDir))
 		err := os.RemoveAll(toolchainDir)
 		if err == nil {
-			fmt.Println()
 			continue
 		}
 
@@ -319,7 +318,12 @@ func (gotv *gotv) setDefaultVersion(version string) (err error) {
 		return
 	}
 
-	fmt.Println("Default version is set as:", tv)
+	var extra = ""
+	if tv.forceSyncRepo {
+		extra = " (the ! sign is ignored)"
+	}
+
+	fmt.Printf("Default version is set as: %s%s.\n", tv, extra)
 	return
 }
 

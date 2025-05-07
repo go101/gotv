@@ -239,6 +239,7 @@ func (gotv *gotv) ensureToolchainVersion(tv *toolchainVersion, forPinning bool) 
 		return envs
 	}
 
+	time.Sleep(time.Second / 3) // ToDo: should be unnecessary.
 	if _, err := util.RunShell(time.Hour, toolchainSrcDir, buildEnvs, nil, os.Stdout, nil, makeScript); err != nil {
 		return "", err
 	}

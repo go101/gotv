@@ -1,5 +1,5 @@
 
-
+* If default of "default version" is "." (if default version is not set, use dot)
 
 * "gotv uncache-version !." removes all non-latest versions
   "gotv uncache-version !1.n" removes all not-latest version of 1.n
