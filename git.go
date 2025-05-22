@@ -51,7 +51,7 @@ func gitAuth(repoAddr string) (gittransport.AuthMethod, error) {
 					continue
 				}
 				name := f.Name()
-				if !strings.HasPrefix(name, "known_hosts") && name != "authorized_keys" && !strings.HasSuffix(name, ".pub") {
+				if strings.HasPrefix(name, "id_") && !strings.HasSuffix(name, ".pub") {
 					potentialKeys = append(potentialKeys, filepath.Join(sshPath, name))
 				}
 			}
