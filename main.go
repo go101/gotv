@@ -51,15 +51,16 @@ func main() {
 	}
 
 	if tv := parseGoToolchainVersion(args[0], false); tv.kind == kind_Default {
-		fmt.Print("No toolchain version is provided, try to use default version")
 		tv = gotv.DefaultVersion()
 		if invalid, _ := tv.IsInvalid(); invalid {
-			fmt.Print(".\n\n")
-			printSetDefaultVersion(program)
-			os.Exit(1)
+			//fmt.Print(".\n\n")
+			//printSetDefaultVersion(program)
+			//os.Exit(1)
+			fmt.Print("No toolchain version is provided, try to use the latest release version.\n\n")
+			tv = parseGoToolchainVersion(".", true)
+		} else {
+			fmt.Printf("No toolchain version is provided, try to use default version (%v).\n\n", tv)
 		}
-
-		fmt.Printf(" (%v).\n\n", tv)
 
 		if err := gotv.tryRunningGoToolchainCommand(tv, args); err != nil {
 			fmt.Fprintln(os.Stderr, err)
@@ -140,7 +141,7 @@ GoTV specific commands:
 	)
 }
 
-const Version = "v0.2.5"
+const Version = "v0.2.6"
 
 func releaseGoTV() {
 	if _, err := util.RunShell(time.Minute*3, "", nil, nil, nil, nil, "go", "test", "./..."); err != nil {

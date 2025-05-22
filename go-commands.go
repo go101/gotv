@@ -247,6 +247,7 @@ func (gotv *gotv) ensureToolchainVersion(tv *toolchainVersion, forPinning bool) 
 	if _, err := os.Stat(goCommandPath); err != nil {
 		return "", err
 	}
+	fmt.Println()
 
 	var buf bytes.Buffer
 	fmt.Fprintf(&buf, `{"revision": "%s"}`, revision)
