@@ -160,40 +160,6 @@ func gitClone(repoAddr, toDir string) error {
 	return nil
 }
 
-func gitPull(repoDir string) error {
-	var repo, err = git.PlainOpen(repoDir)
-	if err != nil {
-		return err
-	}
-
-	remote, err := repo.Remote("origin")
-	if err != nil {
-		return err
-	}
-
-	repoAddr := remote.Config().URLs[0]
-	auth, err := gitAuth(repoAddr)
-	if err != nil {
-		return err
-	}
-
-	worktree, err := repo.Worktree()
-	if err != nil {
-		return err
-	}
-
-	var o = git.PullOptions{
-		Auth:  auth,
-		Force: true,
-	}
-	err = worktree.Pull(&o)
-	if err != nil && err.Error() == "already up-to-date" {
-		err = nil
-	}
-
-	return err
-}
-
 func gitFetch(repoDir string) error {
 	var repo, err = git.PlainOpen(repoDir)
 	if err != nil {

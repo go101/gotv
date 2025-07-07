@@ -30,8 +30,8 @@ func (gotv *gotv) ensureGoRepository(pullOnExist bool) (pulled bool, err error) 
 			if pullOnExist {
 				pulled = true
 
-				fmt.Println("[Run]: git pull -a (in " + gotv.replaceHomeDir(gotv.repositoryDir) + ")")
-				err = gitPull(gotv.repositoryDir)
+				fmt.Println("[Run]: git fetch --all (in " + gotv.replaceHomeDir(gotv.repositoryDir) + ")")
+				err = gitFetch(gotv.repositoryDir)
 			}
 
 			return

@@ -73,9 +73,9 @@ func (gotv *gotv) fetchVersions() error {
 			return err
 		}
 
-		fmt.Println("[Run]: git pull -a (in " + gotv.replaceHomeDir(gotv.repositoryDir) + ")")
+		fmt.Println("[Run]: git fetch --all (in " + gotv.replaceHomeDir(gotv.repositoryDir) + ")")
 
-		err = gitPull(gotv.repositoryDir)
+		err = gitFetch(gotv.repositoryDir)
 		if err != nil {
 			return err
 		}
