@@ -1,4 +1,5 @@
-
+* don't output "[Run]: ..." logs for some commands, such as 'gotv env` and `gotv version`.
+  The output might be caputured in some shell scripts.
 
 * "gotv uncache-version !." removes all non-latest versions
   "gotv uncache-version !1.n" removes all not-latest version of 1.n

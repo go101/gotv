@@ -323,7 +323,7 @@ func (gotv *gotv) setDefaultVersion(version string) (err error) {
 		extra = " (the ! sign is ignored)"
 	}
 
-	fmt.Printf("Default version is set as: %s%s.\n", tv, extra)
+	fmt.Printf("Default version is set as %s%s now.\n", tv, extra)
 	return
 }
 

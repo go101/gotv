@@ -50,17 +50,21 @@ func (tv toolchainVersion) IsInvalid() (bool, string) {
 }
 
 func (tv toolchainVersion) String() string {
+	var suffix = ""
+	if tv.forceSyncRepo {
+		suffix = "!"
+	}
 	switch tv.kind {
 	case kind_Tag:
-		return "tag:" + tv.version
+		return "tag:" + tv.version + suffix
 	case kind_Branch:
-		return "bra:" + tv.version
+		return "bra:" + tv.version + suffix
 	case kind_Revision:
-		return "rev:" + tv.version
+		return "rev:" + tv.version + suffix
 	case kind_Release:
-		return "" + tv.version
+		return "" + tv.version + suffix
 	case kind_Alias:
-		return ":" + tv.version
+		return ":" + tv.version + suffix
 	}
 
 	return fmt.Sprintf("{%v, %v}", tv.kind, tv.version) // invalid
@@ -160,15 +164,10 @@ func parseGoToolchainVersions(versions ...string) ([]toolchainVersion, error) {
 }
 
 func makeAtMostOneForceSyncRepo(tvs []toolchainVersion) {
-	var forceSyncRepo = false
 	for i := range tvs {
-		if tvs[i].forceSyncRepo {
-			if forceSyncRepo {
-				tvs[i].forceSyncRepo = false
-			} else {
-				forceSyncRepo = true
-				tvs[0].forceSyncRepo = true
-			}
+		if fs := tvs[i].forceSyncRepo; fs {
+			tvs[i].forceSyncRepo = false
+			tvs[0].forceSyncRepo = true
 		}
 	}
 }
