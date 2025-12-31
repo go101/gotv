@@ -51,7 +51,7 @@ func (gotv *gotv) normalizeToolchainVersion(tv *toolchainVersion, dontChangeKind
 			}
 
 			if latest == "" {
-				return fmt.Errorf("not latest version found for fake version: %s", tv.version)
+				return fmt.Errorf("not latest version found for pseudo-version: %s", tv.version)
 			}
 
 			tv.version = latest

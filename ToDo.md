@@ -37,7 +37,7 @@ tv
 * add a `gotv gofmt` custom command, to call the `gofmt` command.
 
 * pin-version new implementation
-  * build fake "go" and "gofmt" commands, which will call the real commands.
+  * build wrapper "go" and "gofmt" commands, which will call the real commands.
     The pinned version info is recorded in config file.
 
 * now, "set CGO_ENABLED=0" on windows.
