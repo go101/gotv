@@ -86,7 +86,7 @@ const descToolchainVersion = `where ToolchainVersion might be
 	  * 1.N. means the latest release of Go 1.N
 	    versions. If N >= 21, then 1.N also means
 	    the latest release of Go 1.N versions.
-	  * 1. means the latest Go 1 release verison.
+	  * 1. means the latest Go 1 release version.
 	  * . means the latest Go release version.
 	* :tip, which means the local latest master
 	  branch in the Go git repository.
@@ -162,9 +162,9 @@ func releaseGoTV() {
 		PreviewSuffix      = "-preview"
 	)
 
-	var verisonGoFile = "main.go"
+	var versionGoFile = "main.go"
 
-	oldContent, err := os.ReadFile(verisonGoFile)
+	oldContent, err := os.ReadFile(versionGoFile)
 	if err != nil {
 		log.Printf("failed to load version.go: %s", err)
 		return
@@ -246,7 +246,7 @@ func releaseGoTV() {
 		buf.Write(oldContent[:m])
 		buf.Write(version)
 		buf.Write(oldContent[n:])
-		return os.WriteFile(verisonGoFile, buf.Bytes(), 0644)
+		return os.WriteFile(versionGoFile, buf.Bytes(), 0644)
 	}
 
 	if err := writeNewContent(newVersion); err != nil {

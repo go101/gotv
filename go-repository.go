@@ -58,7 +58,7 @@ func (gotv *gotv) ensureGoRepository(pullOnExist bool) (pulled bool, err error) 
 		return
 	}
 
-	fmt.Println(`Please specify the Go project repositry git address.
+	fmt.Println(`Please specify the Go project repository git address.
 Generally, it should be one of the following ones:
 * https://go.googlesource.com/go
 * https://github.com/golang/go.git
@@ -117,7 +117,7 @@ func (gotv *gotv) copyBranchShallowly(tv toolchainVersion, toDir string) error {
 			return err
 		}
 	default:
-		panic("unsupoorted version kinds")
+		panic("unsupported version kinds")
 	}
 
 	return nil

@@ -24,7 +24,7 @@ func (gotv *gotv) tryRunningGoToolchainCommand(tv toolchainVersion, args []strin
 	return gotv.runGoToolchainCommand(tv, args)
 }
 
-// After normalization, tv.kind may be only tag/brranch/revision
+// After normalization, tv.kind may be only tag/branch/revision
 func (gotv *gotv) normalizeToolchainVersion(tv *toolchainVersion, dontChangeKind bool) error {
 	if tv.kind == kind_Tag || tv.kind == kind_Branch || tv.kind == kind_Revision {
 		return nil
@@ -51,7 +51,7 @@ func (gotv *gotv) normalizeToolchainVersion(tv *toolchainVersion, dontChangeKind
 			}
 
 			if latest == "" {
-				return fmt.Errorf("not latest version found for fake verison: %s", tv.version)
+				return fmt.Errorf("not latest version found for fake version: %s", tv.version)
 			}
 
 			tv.version = latest

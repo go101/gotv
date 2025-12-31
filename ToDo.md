@@ -1,5 +1,5 @@
 * don't output "[Run]: ..." logs for some commands, such as 'gotv env` and `gotv version`.
-  The output might be caputured in some shell scripts.
+  The output might be captured in some shell scripts.
 
 * "gotv uncache-version !." removes all non-latest versions
   "gotv uncache-version !1.n" removes all not-latest version of 1.n
@@ -26,15 +26,15 @@ tv
   * now, if pinned version is 1.21.x, and to build 1.24 versions, get
     building_Go_requires_Go_1_22_6_or_later alike errors.
 
-* gotv 1.18 -env:CGO_ENBLED=1
+* gotv 1.18 -env:CGO_ENABLED=1
 
 
 * unable to build toolchain with versions <= 1.5.n
   * download them (need to set GOROOT etc env vars before run them)
 
-* https://go.dev/VERSION?m=text check lastest released version
+* https://go.dev/VERSION?m=text check latest released version
 
-* add a `gotv gofmt` custom command, to call the `gofmt` coomand.
+* add a `gotv gofmt` custom command, to call the `gofmt` command.
 
 * pin-version new implementation
   * build fake "go" and "gofmt" commands, which will call the real commands.
@@ -51,6 +51,6 @@ tv
 * replace /home/user/.cache to $HOME/.cache in all outputs
   * need to implement a ReplaceWriter io.Writer
 
-* error if there are local modificaitons, notify clean these modificaitons?
+* error if there are local modifications, notify clean these modifications?
 
 * handle os.Interrupt, syscall.SIGTERM
