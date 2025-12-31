@@ -136,7 +136,7 @@ func parseGoToolchainVersion(arg string, argIsVersionForSure bool) toolchainVers
 		return toolchainVersion{kind_Branch, version, forceSyncRepo}
 	case "rev":
 		return toolchainVersion{kind_Revision, version, forceSyncRepo}
-	case "": // alias verisons
+	case "": // alias versions
 	}
 
 	// validate alias names (roughly)
@@ -230,7 +230,7 @@ func compareVersions(x, y string) bool {
 
 // Return nil for failed to find the steps.
 // The input tv should have been normalized,
-// so tv.kind may be only tag/brranch/revision.
+// so tv.kind may be only tag/branch/revision.
 // Returning an invalid tv means using system Go toolchain installation.
 func determineBootstrapToolchainVersion(tv toolchainVersion) *toolchainVersion {
 	switch tv.kind {

@@ -18,25 +18,25 @@ import (
 )
 
 func gitAuth(repoAddr string) (gittransport.AuthMethod, error) {
-	var isSshProtocal bool
+	var isSshProtocol bool
 	for {
 		addr := strings.ToLower(repoAddr)
 		if strings.HasPrefix(addr, "https://") {
 			break
 		}
-		isSshProtocal = strings.HasPrefix(addr, "ssh://")
-		if isSshProtocal {
+		isSshProtocol = strings.HasPrefix(addr, "ssh://")
+		if isSshProtocol {
 			break
 		}
 		if i := strings.IndexByte(addr, '@'); i >= 0 {
 			// also check ':' ?
-			isSshProtocal = true
+			isSshProtocol = true
 			break
 		}
 		break
 	}
 
-	if isSshProtocal {
+	if isSshProtocol {
 		var homeDir, err = os.UserHomeDir()
 		if err != nil {
 			return nil, err

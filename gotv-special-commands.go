@@ -246,7 +246,7 @@ func (gotv *gotv) uncacheVersion(versions ...string) error {
 		var toolchainDir = filepath.Join(gotv.cacheDir, folder)
 		if _, err := os.Stat(toolchainDir); err != nil {
 			if errors.Is(err, fs.ErrNotExist) {
-				fmt.Printf("Vesion %s is not cached.\n", &tvs[i])
+				fmt.Printf("Version %s is not cached.\n", &tvs[i])
 				continue
 			}
 			return err
