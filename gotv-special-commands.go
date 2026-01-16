@@ -212,6 +212,13 @@ func (gotv *gotv) cacheVersion(versions ...string) error {
 		return err
 	}
 
+	var removed = clearForceSyncRepoFrromVersions(tvs)
+	if removed {
+		if _, err = gotv.ensureGoRepository(true); err != nil {
+			return err
+		}
+	}
+
 	for i := range tvs {
 		if _, err := gotv.ensureToolchainVersion(&tvs[i], false); err != nil {
 			return err
@@ -235,6 +242,11 @@ func (gotv *gotv) uncacheVersion(versions ...string) error {
 	tvs, err := parseGoToolchainVersions(versions...)
 	if err != nil {
 		return err
+	}
+
+	var removed = clearForceSyncRepoFrromVersions(tvs)
+	if removed {
+		fmt.Println("The ! sign is ignored.")
 	}
 
 	for i := range tvs {
@@ -314,16 +326,16 @@ func (gotv *gotv) setDefaultVersion(version string) (err error) {
 	//	return
 	//}
 
+	if tv.forceSyncRepo {
+		fmt.Println("The ! sign is ignored.")
+		tv.forceSyncRepo = false
+	}
+
 	if err = gotv.changeDefaultVersion(tv); err != nil {
 		return
 	}
 
-	var extra = ""
-	if tv.forceSyncRepo {
-		extra = " (the ! sign is ignored)"
-	}
-
-	fmt.Printf("Default version is set as %s%s now.\n", tv, extra)
+	fmt.Printf("Default version is set as %s now.\n", tv)
 	return
 }
 

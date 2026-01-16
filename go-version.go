@@ -252,3 +252,15 @@ func determineBootstrapToolchainVersion(tv toolchainVersion) *toolchainVersion {
 
 	return nil
 }
+
+func clearForceSyncRepoFrromVersions(tvs []toolchainVersion) (removed bool) {
+	removed = false
+	for i := range tvs {
+		var tv = &tvs[i]
+		if tv.forceSyncRepo {
+			tv.forceSyncRepo = false
+			removed = true
+		}
+	}
+	return
+}

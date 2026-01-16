@@ -20,13 +20,13 @@ func (gotv *gotv) ensureGoRepository(pullOnExist bool) (pulled bool, err error) 
 			return
 		}
 	} else {
-		var okay = true
 		_, err = gitWorktree(gotv.repositoryDir)
 		if err != nil {
-			okay = false
-		}
-
-		if okay {
+			err = os.RemoveAll(gotv.repositoryDir)
+			if err != nil {
+				return
+			}
+		} else {
 			if pullOnExist {
 				pulled = true
 
@@ -35,11 +35,6 @@ func (gotv *gotv) ensureGoRepository(pullOnExist bool) (pulled bool, err error) 
 			}
 
 			return
-		} else {
-			err = os.RemoveAll(gotv.repositoryDir)
-			if err != nil {
-				return
-			}
 		}
 	}
 
