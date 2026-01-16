@@ -141,7 +141,7 @@ GoTV specific commands:
 	)
 }
 
-const Version = "v0.3.0-preview"
+const Version = "v0.3.0"
 
 func releaseGoTV() {
 	if _, err := util.RunShell(time.Minute*3, "", nil, nil, nil, nil, "go", "test", "./..."); err != nil {
